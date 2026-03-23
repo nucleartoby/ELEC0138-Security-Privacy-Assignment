@@ -1,0 +1,20 @@
+name: Test DDoSim
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: ./install.sh
+      
+      - name: Run basic simulation
+        run: |
+          ./main.py -n 2 create
+          ./main.py -n 2 ns3
+          ./main.py -n 2 destroy
