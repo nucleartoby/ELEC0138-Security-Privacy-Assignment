@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organization Signup - AegisKYC</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .input-focus:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+    <div class="glass-effect rounded-2xl shadow-2xl w-full max-w-6xl overflow-hidden">
+        <div class="flex flex-col md:flex-row">
+            <!-- Left Side - Branding -->
+            <div class="md:w-1/2 bg-gradient-to-br from-blue-600 to-purple-600 p-12 text-white flex flex-col justify-center">
+                <div class="mb-8">
+                    <h1 class="text-4xl font-bold mb-4">🏢 AegisKYC</h1>
+                    <p class="text-xl mb-6">Organization Portal</p>
+                    <div class="w-20 h-1 bg-white rounded"></div>
+                </div>
+                
+                <div class="space-y-6">
+                    <div class="flex items-start space-x-4">
+                        <div class="bg-white/20 rounded-lg p-3">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-lg">Secure KYC Verification</h3>
+                            <p class="text-blue-100">Request and manage KYC verifications for your users</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-4">
+                        <div class="bg-white/20 rounded-lg p-3">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-lg">Real-Time API Integration</h3>
+                            <p class="text-blue-100">Seamless integration with your existing systems</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-4">
+                        <div class="bg-white/20 rounded-lg p-3">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-lg">Analytics Dashboard</h3>
+                            <p class="text-blue-100">Track verification metrics and compliance</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-12 pt-8 border-t border-white/20">
+                    <p class="text-sm text-blue-100">Trusted by leading organizations worldwide</p>
+                </div>
+            </div>
+
+            <!-- Right Side - Signup Form -->
+            <div class="md:w-1/2 p-12">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold gradient-text mb-2">Create Organization Account</h2>
+                    <p class="text-gray-600">Join AegisKYC to streamline your verification process</p>
+                </div>
+
+                <form id="orgSignupForm" class="space-y-5">
+                    <!-- Organization Name -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Organization Name *</label>
+                        <input type="text" id="orgName" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus outline-none transition-all"
+                            placeholder="Acme Corporation">
+                    </div>
+
+                    <!-- Organization Type -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Organization Type *</label>
+                        <select id="orgType" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus outline-none transition-all">
+                            <option value="">Select Type</option>
+                            <option value="fintech">Fintech</option>
+                            <option value="banking">Banking</option>
+                            <option value="crypto">Cryptocurrency Exchange</option>
+                            <option value="ecommerce">E-Commerce</option>
+                            <option value="healthcare">Healthcare</option>
+                            <option value="government">Government Agency</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Registration Number -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Registration Number *</label>
+                        <input type="text" id="regNumber" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus outline-none transition-all"
+                            placeholder="CIN/Registration Number">
+                    </div>
+
+                    <!-- Country -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Country *</label>
+                        <select id="country" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus outline-none transition-all">
+                            <option value="">Select Country</option>
+                            <option value="india">India</option>
+                            <option value="usa">United States</option>
+                            <option value="uk">United Kingdom</option>
+                            <option value="singapore">Singapore</option>
+                            <option value="uae">United Arab Emirates</option>
+                            <option value="canada">Canada</option>
+                            <option value="australia">Australia</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Admin Email -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Admin Email *</label>
+                        <input type="email" id="adminEmail" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus outline-none transition-all"
+                            placeholder="admin@company.com">
+                    </div>
+
+                    <!-- Admin Name -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
+                            <input type="text" id="firstName" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus outline-none transition-all"
+                                placeholder="John">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
+                            <input type="text" id="lastName" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus outline-none transition-all"
+                                placeholder="Doe">
+                        </div>
+                    </div>
+
+                    <!-- Phone -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Contact Number *</label>
+                        <input type="tel" id="phone" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus outline-none transition-all"
+                            placeholder="+91 98765 43210">
+                    </div>
+
+                    <!-- Password -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+                        <input type="password" id="password" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus outline-none transition-all"
+                            placeholder="Minimum 8 characters">
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password *</label>
+                        <input type="password" id="confirmPassword" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus outline-none transition-all"
+                            placeholder="Re-enter password">
+                    </div>
+
+                    <!-- Terms -->
+                    <div class="flex items-start">
+                        <input type="checkbox" id="terms" required
+                            class="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <label for="terms" class="ml-2 text-sm text-gray-600">
+                            I agree to the <a href="#" class="text-blue-600 hover:underline">Terms of Service</a> and 
+                            <a href="#" class="text-blue-600 hover:underline">Privacy Policy</a>
+                        </label>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit"
+                        class="w-full btn-primary text-white font-semibold py-3 px-6 rounded-lg">
+                        Create Account
+                    </button>
+
+                    <!-- Login Link -->
+                    <p class="text-center text-sm text-gray-600 mt-4">
+                        Already have an account? 
+                        <a href="org_login.html" class="text-blue-600 hover:underline font-medium">Sign In</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 bg-white rounded-lg shadow-lg p-4 transform translate-x-full transition-transform duration-300 hidden">
+        <div class="flex items-center space-x-3">
+            <div id="toastIcon"></div>
+            <p id="toastMessage" class="text-gray-800"></p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:5000';
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+            
+            toastMessage.textContent = message;
+            
+            if (type === 'success') {
+                toastIcon.innerHTML = '<svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+            } else {
+                toastIcon.innerHTML = '<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+            }
+            
+            toast.classList.remove('hidden', 'translate-x-full');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => toast.classList.add('hidden'), 300);
+            }, 3000);
+        }
+
+        document.getElementById('orgSignupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                showToast('Passwords do not match!', 'error');
+                return;
+            }
+
+            if (password.length < 8) {
+                showToast('Password must be at least 8 characters!', 'error');
+                return;
+            }
+
+            const formData = {
+                organization_name: document.getElementById('orgName').value,
+                organization_type: document.getElementById('orgType').value,
+                registration_number: document.getElementById('regNumber').value,
+                country: document.getElementById('country').value,
+                admin_email: document.getElementById('adminEmail').value,
+                admin_first_name: document.getElementById('firstName').value,
+                admin_last_name: document.getElementById('lastName').value,
+                phone: document.getElementById('phone').value,
+                password: password
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/organization/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast('Organization registered successfully! Redirecting to login...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'org_login.html';
+                    }, 2000);
+                } else {
+                    showToast(data.error || 'Registration failed!', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Network error. Please try again.', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

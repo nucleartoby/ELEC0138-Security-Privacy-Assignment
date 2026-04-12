@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - AegisKYC</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50 min-h-screen">
+    <!-- Navigation Header -->
+    <nav class="bg-white/80 backdrop-blur-lg border-b border-blue-100 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                    </div>
+                    <span class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">AegisKYC</span>
+                </div>
+                
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-4">
+                        <button class="p-2 hover:bg-blue-50 rounded-lg transition relative">
+                            <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            </svg>
+                            <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </button>
+                        <div class="flex items-center gap-3 pl-4 border-l border-slate-200">
+                            <div class="text-right">
+                                <div class="text-sm font-semibold text-slate-700" id="userName">Loading...</div>
+                                <div class="text-xs text-slate-500" id="userEmail">Loading...</div>
+                            </div>
+                            <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center text-white font-semibold" id="userAvatar">
+                                U
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="logout()" class="text-sm text-red-600 hover:text-red-700 font-medium">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Dashboard Container -->
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Welcome Section -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-slate-800 mb-2">Welcome back, <span id="welcomeName">User</span>! 👋</h1>
+            <p class="text-slate-600">Manage your identity verification and compliance status</p>
+        </div>
+
+        <!-- KYC Status Banner -->
+        <div class="mb-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl p-8 text-white shadow-xl" id="kycStatusBanner">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <h2 class="text-2xl font-bold">KYC Status: <span id="kycStatus">Pending</span></h2>
+                    </div>
+                    <p class="text-blue-100 mb-4" id="kycMessage">Your verification is being processed</p>
+                    <div class="flex gap-3">
+                        <button onclick="startKYC()" class="px-6 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition" id="kycActionBtn">
+                            Start Verification
+                        </button>
+                        <button onclick="viewKYCDetails()" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition border border-white/30" id="kycDetailsBtn">
+                            View Details
+                        </button>
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                    <div class="w-32 h-32 bg-white/20 backdrop-blur-lg rounded-2xl flex items-center justify-center">
+                        <svg class="w-20 h-20 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <!-- Stat Card 1 -->
+            <div class="bg-white rounded-xl p-6 shadow-lg border border-blue-100 hover:shadow-xl transition">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-800" id="documentsCount">0</h3>
+                <p class="text-slate-600 text-sm">Documents Uploaded</p>
+            </div>
+
+            <!-- Stat Card 2 -->
+            <div class="bg-white rounded-xl p-6 shadow-lg border border-cyan-100 hover:shadow-xl transition">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-800">AES-256</h3>
+                <p class="text-slate-600 text-sm">Data Encryption</p>
+            </div>
+
+            <!-- Stat Card 3 -->
+            <div class="bg-white rounded-xl p-6 shadow-lg border border-green-100 hover:shadow-xl transition">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-800" id="securityScore">--</h3>
+                <p class="text-slate-600 text-sm">Identity Score</p>
+            </div>
+
+            <!-- Stat Card 4 -->
+            <div class="bg-white rounded-xl p-6 shadow-lg border border-indigo-100 hover:shadow-xl transition">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-800" id="lastActivity">Just now</h3>
+                <p class="text-slate-600 text-sm">Last Activity</p>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column - 2/3 width -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Verification Progress -->
+                <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+                    <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        Verification Steps
+                    </h3>
+                    
+                    <div class="mb-4 px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg">
+                        <p class="text-xs text-blue-600">
+                            <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                            For representation only, actual results are displayed in above box or to the right
+                        </p>
+                    </div>
+
+                    <!-- Step 1 -->
+                    <div class="mb-6">
+                        <div class="flex items-center gap-4 mb-3">
+                            <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">
+                                ✓
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-slate-800">Personal Information</h4>
+                                <p class="text-sm text-slate-500">Basic details verified</p>
+                            </div>
+                            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Completed</span>
+                        </div>
+                        <div class="ml-14 w-full bg-slate-200 rounded-full h-2">
+                            <div class="bg-green-500 h-2 rounded-full" style="width: 100%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="mb-6">
+                        <div class="flex items-center gap-4 mb-3">
+                            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                                2
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-slate-800">Document Upload</h4>
+                                <p class="text-sm text-slate-500">Upload ID proof and address proof</p>
+                            </div>
+                            <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">In Progress</span>
+                        </div>
+                        <div class="ml-14 w-full bg-slate-200 rounded-full h-2">
+                            <div class="bg-blue-500 h-2 rounded-full" style="width: 60%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="mb-6">
+                        <div class="flex items-center gap-4 mb-3">
+                            <div class="w-10 h-10 bg-slate-300 rounded-full flex items-center justify-center text-white font-bold">
+                                3
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-slate-500">Biometric Verification</h4>
+                                <p class="text-sm text-slate-400">Face recognition and liveness check</p>
+                            </div>
+                            <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-semibold">Pending</span>
+                        </div>
+                        <div class="ml-14 w-full bg-slate-200 rounded-full h-2">
+                            <div class="bg-slate-300 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div>
+                        <div class="flex items-center gap-4 mb-3">
+                            <div class="w-10 h-10 bg-slate-300 rounded-full flex items-center justify-center text-white font-bold">
+                                4
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-slate-500">Final Review</h4>
+                                <p class="text-sm text-slate-400">Compliance team verification</p>
+                            </div>
+                            <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-semibold">Pending</span>
+                        </div>
+                        <div class="ml-14 w-full bg-slate-200 rounded-full h-2">
+                            <div class="bg-slate-300 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Consent Requests -->
+                <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+                    <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                        </svg>
+                        Access Requests
+                        <span id="consentBadge" class="ml-auto px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold hidden">0 Pending</span>
+                    </h3>
+
+                    <div id="consentRequestsList" class="space-y-3">
+                        <!-- Consent requests will be loaded here -->
+                        <div class="text-center py-8 text-slate-500">
+                            <svg class="w-16 h-16 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                            </svg>
+                            <p class="text-sm">No access requests yet</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+                    <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                        <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Recent Activity
+                    </h3>
+
+                    <div class="space-y-4" id="activityLog">
+                        <!-- Activity items will be loaded here -->
+                        <div class="flex items-start gap-4 pb-4 border-b border-slate-100">
+                            <div class="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                            <div class="flex-1">
+                                <p class="text-slate-800 font-medium">Account created successfully</p>
+                                <p class="text-sm text-slate-500">Just now</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - 1/3 width -->
+            <div class="space-y-6">
+                <!-- KYC Credential Card -->
+                <div id="credentialCard" class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl p-6 shadow-lg text-white hidden">
+                    <div class="flex items-center gap-3 mb-4">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                        <h3 class="text-lg font-bold">KYC Credential</h3>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-emerald-100 text-sm mb-1">Credential ID</p>
+                        <p class="font-mono text-sm font-semibold" id="credentialId">--</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-emerald-100 text-sm mb-2">Identity Integrity Score</p>
+                        <div class="flex items-center gap-3">
+                            <div class="flex-1 bg-white/20 rounded-full h-3">
+                                <div id="integrityScoreBar" class="bg-white h-3 rounded-full transition-all" style="width: 0%"></div>
+                            </div>
+                            <span class="text-2xl font-bold" id="integrityScoreText">--</span>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center gap-2" id="docVerifiedStatus">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-sm">Documents Verified</span>
+                        </div>
+                        <div class="flex items-center gap-2" id="faceVerifiedStatus">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-sm">Face Verified</span>
+                        </div>
+                        <div class="flex items-center gap-2" id="addressVerifiedStatus">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-sm">Address Verified</span>
+                        </div>
+                        <div class="flex items-center gap-2" id="amlClearedStatus">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-sm">AML Cleared</span>
+                        </div>
+                    </div>
+                    
+                    <div class="text-sm">
+                        <p class="text-emerald-100">Valid until: <span id="credentialExpiry" class="font-semibold text-white">--</span></p>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Quick Actions</h3>
+                    <div class="space-y-3">
+                        <button onclick="uploadDocument()" class="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-cyan-600 transition flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            Upload Document
+                        </button>
+                        <button onclick="updateProfile()" class="w-full px-4 py-3 bg-white border-2 border-blue-200 text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            Update Profile
+                        </button>
+                        <button onclick="viewDocuments()" class="w-full px-4 py-3 bg-white border-2 border-cyan-200 text-cyan-600 rounded-lg font-semibold hover:bg-cyan-50 transition flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            View Documents
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Security Info -->
+                <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-6 shadow-lg text-white">
+                    <div class="flex items-center gap-3 mb-4">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                        </svg>
+                        <h3 class="text-lg font-bold">Your Data is Secure</h3>
+                    </div>
+                    <div class="space-y-3 mb-4">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-sm">AES-256-GCM Encryption</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-sm">GDPR Compliant</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-sm">SOC 2 Certified</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-sm">PCI DSS Level 1</span>
+                        </div>
+                    </div>
+                    <button class="w-full px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-semibold transition backdrop-blur-sm">
+                        Learn More
+                    </button>
+                </div>
+
+                <!-- Support Card -->
+                <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+                    <h3 class="text-lg font-bold text-slate-800 mb-3">Need Help?</h3>
+                    <p class="text-sm text-slate-600 mb-4">Our support team is available 24/7 to assist you.</p>
+                    <button class="w-full px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                        </svg>
+                        Contact Support
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load user data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserData();
+            loadActivityLog();
+            checkKYCStatus();
+            loadCredentialData();
+            loadConsentRequests();
+        });
+
+        function loadUserData() {
+            const userId = localStorage.getItem('user_id');
+            const kycStatus = localStorage.getItem('kyc_status');
+            
+            console.log('Loading user data for ID:', userId);
+            
+            if (!userId) {
+                console.log('No user ID found, redirecting to login');
+                window.location.href = '/login';
+                return;
+            }
+
+            // Fetch user details from API
+            fetch(`/api/auth/user/${userId}`)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch user data');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('User data received:', data);
+                    if (data.success && data.user) {
+                        const user = data.user;
+                        const fullName = user.full_name || 'User';
+                        const firstName = fullName.split(' ')[0];
+                        
+                        console.log('Setting user name to:', fullName);
+                        console.log('Setting welcome name to:', firstName);
+                        
+                        document.getElementById('userName').textContent = fullName;
+                        document.getElementById('userEmail').textContent = user.email || '';
+                        document.getElementById('welcomeName').textContent = firstName;
+                        
+                        // Set avatar initial
+                        const initial = fullName.charAt(0).toUpperCase();
+                        document.getElementById('userAvatar').textContent = initial;
+                    } else {
+                        console.error('User data not found in response');
+                        setDefaultUserInfo();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading user data:', error);
+                    setDefaultUserInfo();
+                });
+        }
+
+        function setDefaultUserInfo() {
+            document.getElementById('userName').textContent = 'User';
+            document.getElementById('userEmail').textContent = '';
+            document.getElementById('welcomeName').textContent = 'User';
+            document.getElementById('userAvatar').textContent = 'U';
+        }
+
+        function checkKYCStatus() {
+            const userId = localStorage.getItem('user_id');
+            if (!userId) return;
+            
+            // Fetch real KYC status from backend
+            fetch(`/api/kyc/user-status/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Extract current_state from kyc_status object
+                        const status = (typeof data.kyc_status === 'object') 
+                            ? data.kyc_status.current_state 
+                            : data.kyc_status;
+                        const completionPercent = (typeof data.kyc_status === 'object') 
+                            ? data.kyc_status.completion_percent 
+                            : data.completion_percent;
+                        
+                        updateKYCBanner(status);
+                        
+                        // Update completion percent in UI if available
+                        if (completionPercent > 0) {
+                            document.querySelector('#kycStatusBanner p').textContent = 
+                                `Your verification is ${completionPercent}% complete`;
+                        }
+                        
+                        // Update timeline if available
+                        if (data.timeline && data.timeline.length > 0) {
+                            displayKYCTimeline(data.timeline);
+                        }
+                    } else {
+                        // Fallback to localStorage
+                        const kycStatus = localStorage.getItem('kyc_status') || 'not_started';
+                        updateKYCBanner(kycStatus);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching KYC status:', error);
+                    const kycStatus = localStorage.getItem('kyc_status') || 'not_started';
+                    updateKYCBanner(kycStatus);
+                });
+        }
+        
+        function displayKYCTimeline(timeline) {
+            // Update recent activity with KYC timeline
+            const container = document.getElementById('activityLog');
+            const timelineHTML = timeline.slice(0, 5).map(item => `
+                <div class="flex items-start gap-4 pb-4 border-b border-slate-100">
+                    <div class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                    <div class="flex-1">
+                        <p class="text-slate-800 font-medium">${item.details}</p>
+                        <p class="text-sm text-slate-500">Step ${item.step}: ${item.action.replace(/_/g, ' ')}</p>
+                    </div>
+                </div>
+            `).join('');
+            
+            if (timelineHTML) {
+                container.innerHTML = timelineHTML;
+            }
+        }
+
+        function updateKYCBanner(status) {
+            const banner = document.getElementById('kycStatusBanner');
+            const statusEl = document.getElementById('kycStatus');
+            const messageEl = document.getElementById('kycMessage');
+            const actionBtn = document.getElementById('kycActionBtn');
+
+            const statusConfig = {
+                'not_started': {
+                    text: 'Not Started',
+                    message: 'Complete your KYC verification to unlock full platform access',
+                    btnText: 'Start Verification',
+                    gradient: 'from-slate-500 to-slate-600'
+                },
+                'in_progress': {
+                    text: 'In Progress',
+                    message: 'Your verification is being processed. This usually takes 24-48 hours.',
+                    btnText: 'Continue Verification',
+                    gradient: 'from-blue-500 to-cyan-500'
+                },
+                're_verification': {
+                    text: 'Re-Verification In Progress',
+                    message: 'Updating your KYC credentials with latest information',
+                    btnText: 'Continue Re-KYC',
+                    gradient: 'from-indigo-500 to-purple-500'
+                },
+                'under_review': {
+                    text: 'Under Review',
+                    message: 'Our compliance team is reviewing your documents',
+                    btnText: 'View Details',
+                    gradient: 'from-yellow-500 to-orange-500'
+                },
+                'approved': {
+                    text: 'Verified ✓',
+                    message: 'Your identity has been successfully verified!',
+                    btnText: 'Re-KYC / Update',
+                    gradient: 'from-green-500 to-emerald-500'
+                },
+                'rejected': {
+                    text: 'Action Required',
+                    message: 'Some documents need to be resubmitted',
+                    btnText: 'Resubmit Documents',
+                    gradient: 'from-red-500 to-pink-500'
+                }
+            };
+
+            const config = statusConfig[status] || statusConfig['not_started'];
+            statusEl.textContent = config.text;
+            messageEl.textContent = config.message;
+            actionBtn.textContent = config.btnText;
+            banner.className = `mb-8 bg-gradient-to-r ${config.gradient} rounded-2xl p-8 text-white shadow-xl`;
+        }
+
+        function loadActivityLog() {
+            const userId = localStorage.getItem('user_id');
+            if (!userId) return;
+
+            // Fetch activity log from API
+            fetch(`/api/auth/activity/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.activities) {
+                        displayActivities(data.activities);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading activity:', error);
+                });
+        }
+
+        function displayActivities(activities) {
+            const container = document.getElementById('activityLog');
+            if (activities.length === 0) return;
+
+            container.innerHTML = activities.map(activity => `
+                <div class="flex items-start gap-4 pb-4 border-b border-slate-100">
+                    <div class="w-2 h-2 bg-${activity.type === 'success' ? 'green' : 'blue'}-500 rounded-full mt-2"></div>
+                    <div class="flex-1">
+                        <p class="text-slate-800 font-medium">${activity.message}</p>
+                        <p class="text-sm text-slate-500">${activity.timestamp}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function startKYC() {
+            const userId = localStorage.getItem('user_id');
+            
+            // Check if user has existing credential
+            fetch(`/api/kyc/credential/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.status === 'active') {
+                        // User has active KYC - initiate Re-KYC
+                        if (confirm(`You already have an active KYC credential (${data.credential_id}).\n\nDo you want to update your information? This will keep your existing credential ID and update the data.`)) {
+                            localStorage.setItem('is_rekyc', 'true');
+                            
+                            // Initiate verification first
+                            initiateVerification(userId, true).then(() => {
+                                window.location.href = '/kyc_complete';
+                            });
+                        }
+                    } else {
+                        // New KYC
+                        localStorage.setItem('is_rekyc', 'false');
+                        
+                        // Initiate verification first
+                        initiateVerification(userId, false).then(() => {
+                            window.location.href = '/kyc_complete';
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking KYC status:', error);
+                    // Default to new KYC on error
+                    localStorage.setItem('is_rekyc', 'false');
+                    initiateVerification(userId, false).then(() => {
+                        window.location.href = '/kyc_complete';
+                    });
+                });
+        }
+        
+        async function initiateVerification(userId, isReKYC) {
+            try {
+                const response = await fetch('/api/kyc/initiate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        user_id: userId,
+                        is_rekyc: isReKYC
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    localStorage.setItem('verification_id', result.verification_id);
+                    return result.verification_id;
+                }
+            } catch (error) {
+                console.error('Error initiating verification:', error);
+                throw error;
+            }
+        }
+        
+        function viewKYCDetails() {
+            // TODO: Implement KYC details modal
+            alert('KYC details viewer will be implemented here');
+        }
+        
+        function loadCredentialData() {
+            const userId = localStorage.getItem('user_id');
+            if (!userId) return;
+            
+            // Fetch credential data
+            fetch(`/api/kyc/credential/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show credential card
+                        document.getElementById('credentialCard').classList.remove('hidden');
+                        
+                        // Populate credential data
+                        document.getElementById('credentialId').textContent = data.credential_id || '--';
+                        
+                        const summary = data.verification_summary || {};
+                        const score = summary.identity_integrity_score || 0;
+                        
+                        // Update identity score
+                        document.getElementById('integrityScoreText').textContent = score.toFixed(1);
+                        document.getElementById('integrityScoreBar').style.width = score + '%';
+                        document.getElementById('securityScore').textContent = score.toFixed(1);
+                        
+                        // Update verification status icons
+                        updateVerificationStatus('docVerifiedStatus', summary.document_verified);
+                        updateVerificationStatus('faceVerifiedStatus', summary.face_verified);
+                        updateVerificationStatus('addressVerifiedStatus', summary.address_verified);
+                        updateVerificationStatus('amlClearedStatus', summary.aml_cleared);
+                        
+                        // Update expiry date
+                        if (data.expiry_date) {
+                            const expiryDate = new Date(data.expiry_date);
+                            document.getElementById('credentialExpiry').textContent = 
+                                expiryDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                        }
+                    } else {
+                        // No credential yet - hide the card
+                        console.log('No credential found:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading credential:', error);
+                });
+        }
+
+        // Load Consent Requests
+        async function loadConsentRequests() {
+            const userId = localStorage.getItem('user_id');
+            console.log('Loading consent requests for user:', userId);
+            
+            if (!userId) {
+                console.log('No user ID found');
+                return;
+            }
+            
+            try {
+                console.log('Fetching consent requests from:', `/api/auth/user/consent-requests/${userId}`);
+                const response = await fetch(`/api/auth/user/consent-requests/${userId}`);
+                console.log('Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Consent requests data:', data);
+                
+                if (data.success && data.requests && data.requests.length > 0) {
+                    console.log('Found', data.requests.length, 'consent requests');
+                    
+                    const container = document.getElementById('consentRequestsList');
+                    const badge = document.getElementById('consentBadge');
+                    
+                    const pendingCount = data.requests.filter(r => r.consent_status === 'pending').length;
+                    console.log('Pending requests:', pendingCount);
+                    
+                    if (pendingCount > 0) {
+                        badge.textContent = `${pendingCount} Pending`;
+                        badge.classList.remove('hidden');
+                    }
+                    
+                    container.innerHTML = data.requests.map(req => {
+                        const isPending = req.consent_status === 'pending';
+                        const isApproved = req.consent_status === 'approved';
+                        
+                        let statusBadge = '';
+                        if (isPending) {
+                            statusBadge = '<span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold">Pending</span>';
+                        } else if (isApproved) {
+                            statusBadge = '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Approved</span>';
+                        } else {
+                            statusBadge = '<span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">Rejected</span>';
+                        }
+                        
+                        return `
+                            <div class="border border-slate-200 rounded-lg p-4 ${isPending ? 'bg-yellow-50' : ''}">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-slate-800">${req.organization_name}</h4>
+                                        <p class="text-xs text-slate-500">${new Date(req.created_at).toLocaleString()}</p>
+                                    </div>
+                                    ${statusBadge}
+                                </div>
+                                <p class="text-sm text-slate-700 mb-3"><strong>Purpose:</strong> ${req.purpose}</p>
+                                <div class="bg-white rounded-lg p-3 mb-3 border border-slate-200">
+                                    <div class="grid grid-cols-2 gap-2 text-xs">
+                                        <div>
+                                            <span class="text-slate-500">Credential ID:</span>
+                                            <p class="font-semibold text-slate-800">${req.credential_id || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <span class="text-slate-500">User Name:</span>
+                                            <p class="font-semibold text-slate-800">${req.user_name || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <span class="text-slate-500">Email:</span>
+                                            <p class="font-semibold text-slate-800">${req.user_email || 'N/A'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                ${isPending ? `
+                                    <div class="flex gap-2">
+                                        <button onclick="handleConsent('${req._id}', 'approved')" 
+                                            class="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition">
+                                            Approve
+                                        </button>
+                                        <button onclick="handleConsent('${req._id}', 'rejected')" 
+                                            class="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition">
+                                            Reject
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    console.log('No consent requests or error:', data);
+                }
+            } catch (error) {
+                console.error('Error loading consent requests:', error);
+            }
+        }
+
+        // Handle Consent Approval/Rejection
+        async function handleConsent(requestId, status) {
+            try {
+                const response = await fetch('/api/auth/user/consent-response', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        request_id: requestId,
+                        status: status
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Reload consent requests
+                    loadConsentRequests();
+                    
+                    // Show success message
+                    const message = status === 'approved' ? 'Access approved!' : 'Access rejected!';
+                    showNotification(message, 'success');
+                } else {
+                    showNotification(data.message || 'Failed to update consent', 'error');
+                }
+            } catch (error) {
+                console.error('Error handling consent:', error);
+                showNotification('Network error. Please try again.', 'error');
+            }
+        }
+
+        function showNotification(message, type) {
+            // Simple notification - you can enhance this
+            alert(message);
+        }
+        
+        function updateVerificationStatus(elementId, isVerified) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            if (isVerified) {
+                element.innerHTML = `
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span class="text-sm">${element.querySelector('span').textContent}</span>
+                `;
+            } else {
+                element.innerHTML = `
+                    <svg class="w-5 h-5 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    <span class="text-sm opacity-70">${element.querySelector('span').textContent}</span>
+                `;
+            }
+        }
+
+        function uploadDocument() {
+            alert('Document upload feature will be implemented here');
+        }
+
+        function updateProfile() {
+            alert('Profile update feature will be implemented here');
+        }
+
+        function viewDocuments() {
+            alert('Document viewer will be implemented here');
+        }
+
+        function logout() {
+            localStorage.removeItem('user_id');
+            localStorage.removeItem('kyc_status');
+            window.location.href = '/login';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>System Tests & Feature Proofs - AegisKYC</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50 min-h-screen">
+<nav class="bg-white/80 backdrop-blur-lg border-b border-blue-100 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                </div>
+                <span class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">AegisKYC</span>
+            </div>
+            <div>
+                <a href="/dashboard.html" class="text-sm text-slate-600 hover:text-slate-800">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="max-w-7xl mx-auto px-6 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-slate-800 mb-2">System Tests & Feature Validation</h1>
+        <p class="text-slate-600">Run comprehensive tests to validate performance, security features, and AI capabilities. All tests run in real-time against live backend services.</p>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div class="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl p-6 text-white shadow-lg">
+            <h2 class="text-xl font-semibold mb-2">Performance Tests</h2>
+            <p class="text-blue-50 text-sm mb-4">Measure database latency and model inference times</p>
+            <button id="runPerfBtn" class="px-4 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition">Run Performance Tests</button>
+        </div>
+        <div class="bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl p-6 text-white shadow-lg">
+            <h2 class="text-xl font-semibold mb-2">Feature Proofs</h2>
+            <p class="text-purple-50 text-sm mb-4">Validate encryption, signatures, and AI capabilities</p>
+            <button id="runProofBtn" class="px-4 py-2 bg-white text-indigo-600 rounded-lg font-semibold hover:bg-purple-50 transition">Run Feature Proofs</button>
+        </div>
+    </div>
+
+    <!-- Status Banner -->
+    <div id="statusBanner" class="hidden mb-6"></div>
+
+    <!-- Performance Results -->
+    <div id="perfSection" class="bg-white rounded-xl p-6 shadow-lg border border-slate-200 mb-6 hidden">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                Performance Test Results
+            </h3>
+            <span id="perfTime" class="text-xs text-slate-500"></span>
+        </div>
+        <div id="perfResults" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+    </div>
+
+    <!-- Feature Proof Results -->
+    <div id="proofSection" class="bg-white rounded-xl p-6 shadow-lg border border-slate-200 mb-6 hidden">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Feature Proof Results
+            </h3>
+            <span id="proofTime" class="text-xs text-slate-500"></span>
+        </div>
+        <div id="proofResults" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </div>
+
+    <!-- Combined JSON View -->
+    <div id="jsonSection" class="bg-white rounded-xl p-6 shadow-lg border border-slate-200 hidden">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-lg font-semibold">Raw JSON Response</h3>
+            <button id="copyBtn" class="px-3 py-1 text-xs bg-slate-100 hover:bg-slate-200 rounded">Copy</button>
+        </div>
+        <pre id="jsonOutput" class="text-xs text-slate-700 bg-slate-50 p-4 rounded overflow-auto max-h-96 font-mono">No results yet.</pre>
+    </div>
+
+    <!-- Test History -->
+    <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200 mt-6">
+        <h3 class="text-lg font-semibold mb-3">Test History</h3>
+        <div id="history" class="space-y-2 text-sm text-slate-700">No tests run yet.</div>
+    </div>
+</div>
+
+<script>
+// Utility functions
+function showStatus(message, type = 'info') {
+    const banner = document.getElementById('statusBanner');
+    const colors = {
+        info: 'bg-blue-50 border-blue-200 text-blue-800',
+        success: 'bg-green-50 border-green-200 text-green-800',
+        error: 'bg-red-50 border-red-200 text-red-800',
+        warning: 'bg-yellow-50 border-yellow-200 text-yellow-800'
+    };
+    banner.className = `${colors[type]} border rounded-lg p-4 mb-6`;
+    banner.innerHTML = `<p class="font-medium">${message}</p>`;
+    banner.classList.remove('hidden');
+    setTimeout(() => banner.classList.add('hidden'), 5000);
+}
+
+function createCard(title, value, status = 'neutral') {
+    const statusColors = {
+        success: 'border-green-200 bg-green-50',
+        error: 'border-red-200 bg-red-50',
+        warning: 'border-yellow-200 bg-yellow-50',
+        neutral: 'border-slate-200 bg-white'
+    };
+    const statusIcons = {
+        success: '<svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>',
+        error: '<svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>',
+        warning: '<svg class="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>',
+        neutral: ''
+    };
+    return `
+        <div class="border ${statusColors[status]} rounded-lg p-4 transition-all hover:shadow-md">
+            <div class="flex items-center gap-2 mb-2">
+                ${statusIcons[status] || ''}
+                <h4 class="font-semibold text-slate-800">${title}</h4>
+            </div>
+            <div class="text-sm text-slate-700">${value}</div>
+        </div>
+    `;
+}
+
+function addHistory(type, summary) {
+    const history = document.getElementById('history');
+    const entry = document.createElement('div');
+    entry.className = 'border rounded-lg p-3 bg-slate-50 hover:bg-slate-100 transition';
+    entry.innerHTML = `
+        <div class="flex items-center justify-between">
+            <span class="font-medium text-slate-800">${type}</span>
+            <span class="text-xs text-slate-500">${new Date().toLocaleString()}</span>
+        </div>
+        <div class="text-xs text-slate-600 mt-1">${summary}</div>
+    `;
+    if (history.textContent.trim() === 'No tests run yet.') history.innerHTML = '';
+    history.prepend(entry);
+}
+
+// Performance Tests
+document.getElementById('runPerfBtn').addEventListener('click', async function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Running...';
+    
+    try {
+        showStatus('Running performance tests...', 'info');
+        const res = await fetch('/api/admin/perf-test');
+        const data = await res.json();
+        
+        if (!data.success) {
+            showStatus('Performance test failed: ' + (data.message || 'unknown error'), 'error');
+            return;
+        }
+
+        const r = data.results;
+        const container = document.getElementById('perfResults');
+        container.innerHTML = '';
+
+        // Database tests
+        if (r.mongodb_ping_ms) {
+            container.innerHTML += createCard('MongoDB Ping', `${r.mongodb_ping_ms} ms`, r.mongodb_ping_ms < 500 ? 'success' : 'warning');
+        } else {
+            container.innerHTML += createCard('MongoDB Ping', `Error: ${r.mongodb_ping_error || 'unknown'}`, 'error');
+        }
+
+        if (r.db_find_one_ms) {
+            container.innerHTML += createCard('DB Query', `${r.db_find_one_ms} ms<br><span class="text-xs text-slate-500">Sample exists: ${r.db_sample_user_exists}</span>`, r.db_find_one_ms < 100 ? 'success' : 'warning');
+        } else {
+            container.innerHTML += createCard('DB Query', `Error: ${r.db_find_one_error || 'unknown'}`, 'error');
+        }
+
+        // AI Model tests
+        if (r.ocr_ms) {
+            container.innerHTML += createCard('OCR Model', `${r.ocr_ms} ms<br><span class="text-xs text-slate-500">Lines: ${r.ocr_sample ? r.ocr_sample.lines_count : 0}</span>`, 'success');
+        } else {
+            container.innerHTML += createCard('OCR Model', `${r.ocr_not_available || r.ocr_error || 'Not available'}`, 'warning');
+        }
+
+        if (r.deepfake_ms) {
+            const prob = r.deepfake_output ? r.deepfake_output.probability : 'n/a';
+            container.innerHTML += createCard('Deepfake Detection', `${r.deepfake_ms} ms<br><span class="text-xs text-slate-500">Probability: ${prob}</span>`, 'success');
+        } else {
+            container.innerHTML += createCard('Deepfake Detection', `${r.deepfake_not_available || 'Not available'}`, 'warning');
+        }
+
+        if (r.face_match_ms) {
+            container.innerHTML += createCard('Face Matcher', `${r.face_match_ms} ms<br><span class="text-xs text-slate-500">Score: ${r.face_match_score}</span>`, 'success');
+        } else {
+            container.innerHTML += createCard('Face Matcher', `${r.face_match_not_available || r.face_match_error || 'Not available'}`, 'warning');
+        }
+
+        if (r.tamper_ms) {
+            container.innerHTML += createCard('Tamper Detector', `${r.tamper_ms} ms<br><span class="text-xs text-slate-500">Score: ${r.tamper_score}</span>`, 'success');
+        } else {
+            container.innerHTML += createCard('Tamper Detector', `${r.tamper_not_available || r.tamper_error || 'Not available'}`, 'warning');
+        }
+
+        document.getElementById('perfSection').classList.remove('hidden');
+        document.getElementById('perfTime').textContent = `Completed at ${new Date().toLocaleTimeString()}`;
+        document.getElementById('jsonSection').classList.remove('hidden');
+        document.getElementById('jsonOutput').textContent = JSON.stringify(data, null, 2);
+
+        const summary = `DB: ${r.mongodb_ping_ms || 'err'} ms | Deepfake: ${r.deepfake_ms || 'n/a'} ms | OCR: ${r.ocr_ms || 'n/a'} ms`;
+        addHistory('Performance Test', summary);
+        showStatus('Performance tests completed successfully', 'success');
+
+    } catch (err) {
+        showStatus('Performance test request failed: ' + err.message, 'error');
+        console.error(err);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Run Performance Tests';
+    }
+});
+
+// Feature Proofs
+document.getElementById('runProofBtn').addEventListener('click', async function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Running...';
+
+    try {
+        showStatus('Running feature proofs...', 'info');
+        const res = await fetch('/api/admin/feature-proof');
+        const data = await res.json();
+
+        if (!data.success) {
+            showStatus('Feature proof failed: ' + (data.message || 'unknown error'), 'error');
+            return;
+        }
+
+        const p = data.proof;
+        const container = document.getElementById('proofResults');
+        container.innerHTML = '';
+
+        // AES-256-GCM
+        if (p.aes_256_gcm && p.aes_256_gcm.decrypted_equals) {
+            container.innerHTML += createCard('AES-256-GCM Encryption', 'Encrypt/Decrypt: ✓ OK<br><span class="text-xs text-slate-500">Military-grade encryption verified</span>', 'success');
+        } else {
+            container.innerHTML += createCard('AES-256-GCM Encryption', JSON.stringify(p.aes_256_gcm), p.aes_256_gcm && p.aes_256_gcm.error ? 'error' : 'warning');
+        }
+
+        // RSA-2048
+        if (p.rsa_2048_signature && p.rsa_2048_signature.verify_result && p.rsa_2048_signature.verify_result.valid) {
+            container.innerHTML += createCard('RSA-2048 Signature', 'Signature: ✓ Valid<br><span class="text-xs text-slate-500">Tamper-proof credentials verified</span>', 'success');
+        } else {
+            container.innerHTML += createCard('RSA-2048 Signature', JSON.stringify(p.rsa_2048_signature), p.rsa_2048_signature && p.rsa_2048_signature.error ? 'error' : 'warning');
+        }
+
+        // Audit Logs
+        if (p.audit_logs && Array.isArray(p.audit_logs) && p.audit_logs.length > 0) {
+            const events = p.audit_logs.map(x => x.event).join(', ');
+            container.innerHTML += createCard('Audit Logging', `Recent logs: ${events}<br><span class="text-xs text-slate-500">${p.audit_logs.length} events found</span>`, 'success');
+        } else {
+            container.innerHTML += createCard('Audit Logging', JSON.stringify(p.audit_logs), 'warning');
+        }
+
+        // Deepfake Detection
+        if (p.deepfake_detection && !p.deepfake_detection.error) {
+            container.innerHTML += createCard('Deepfake Detection', JSON.stringify(p.deepfake_detection), 'success');
+        } else {
+            container.innerHTML += createCard('Deepfake Detection', p.deepfake_detection && p.deepfake_detection.error ? p.deepfake_detection.error : 'Not available', 'warning');
+        }
+
+        // OCR
+        if (p.ocr && !p.ocr.error) {
+            const lines = p.ocr.lines ? p.ocr.lines.length : 0;
+            container.innerHTML += createCard('Live OCR', `Lines extracted: ${lines}<br><span class="text-xs text-slate-500">${p.ocr.raw_preview || ''}</span>`, lines > 0 ? 'success' : 'neutral');
+        } else {
+            container.innerHTML += createCard('Live OCR', p.ocr && p.ocr.error ? p.ocr.error : 'Not available', 'warning');
+        }
+
+        // Behavioral Analyzer
+        if (p.behavioral_analyzer && !p.behavioral_analyzer.error) {
+            const score = p.behavioral_analyzer.anomaly_score !== undefined ? p.behavioral_analyzer.anomaly_score : 'n/a';
+            container.innerHTML += createCard('Behavioral Analyzer', `Anomaly score: ${score}<br><span class="text-xs text-slate-500">Micro-gesture detection active</span>`, 'success');
+        } else {
+            container.innerHTML += createCard('Behavioral Analyzer', p.behavioral_analyzer && p.behavioral_analyzer.error ? p.behavioral_analyzer.error : 'Not available', 'warning');
+        }
+
+        // Device Fingerprint
+        if (p.device_fingerprint && p.device_fingerprint.fingerprint) {
+            container.innerHTML += createCard('Device Fingerprinting', `FP: ${p.device_fingerprint.fingerprint.slice(0, 16)}...<br><span class="text-xs text-slate-500">Unique device ID generated</span>`, 'success');
+        } else {
+            container.innerHTML += createCard('Device Fingerprinting', JSON.stringify(p.device_fingerprint), 'warning');
+        }
+
+        document.getElementById('proofSection').classList.remove('hidden');
+        document.getElementById('proofTime').textContent = `Completed at ${new Date().toLocaleTimeString()}`;
+        document.getElementById('jsonSection').classList.remove('hidden');
+        document.getElementById('jsonOutput').textContent = JSON.stringify(data, null, 2);
+
+        const summary = `Encryption: ${p.aes_256_gcm && p.aes_256_gcm.decrypted_equals ? '✓' : '✗'} | Signature: ${p.rsa_2048_signature && p.rsa_2048_signature.verify_result && p.rsa_2048_signature.verify_result.valid ? '✓' : '✗'} | Logs: ${p.audit_logs && p.audit_logs.length || 0}`;
+        addHistory('Feature Proof', summary);
+        showStatus('Feature proofs completed successfully', 'success');
+
+    } catch (err) {
+        showStatus('Feature proof request failed: ' + err.message, 'error');
+        console.error(err);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Run Feature Proofs';
+    }
+});
+
+// Copy JSON
+document.getElementById('copyBtn').addEventListener('click', () => {
+    const text = document.getElementById('jsonOutput').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        showStatus('JSON copied to clipboard', 'success');
+    });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - AegisKYC</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50 min-h-screen">
+    <!-- Admin Navigation -->
+    <nav class="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 sticky top-0 z-50 shadow-xl">
+        <div class="max-w-full px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="text-2xl font-bold text-white">AegisKYC</span>
+                        <span class="ml-2 px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full">ADMIN</span>
+                        <p class="text-xs text-slate-400">Compliance & Monitoring Portal</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-4 text-white">
+                        <div class="text-right">
+                            <p class="text-sm font-semibold">Administrator</p>
+                            <p class="text-xs text-slate-400">Full Access</p>
+                        </div>
+                        <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center font-bold">
+                            A
+                        </div>
+                    </div>
+                    <button onclick="logout()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white border-r border-slate-200 min-h-screen shadow-lg">
+            <div class="p-6 space-y-2">
+                <a href="#overview" onclick="showSection('overview')" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-lg transition cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    <span class="font-semibold">Overview</span>
+                </a>
+                
+                <a href="#users" onclick="showSection('users')" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <span class="font-semibold">All Users</span>
+                </a>
+                
+                <a href="#verifications" onclick="showSection('verifications')" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="font-semibold">Verifications</span>
+                </a>
+                
+                <a href="#analytics" onclick="showSection('analytics')" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    <span class="font-semibold">Analytics</span>
+                </a>
+                
+                <a href="#credentials" onclick="showSection('credentials')" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                    </svg>
+                    <span class="font-semibold">Credentials</span>
+                </a>
+                
+                <a href="#security" onclick="showSection('security')" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    <span class="font-semibold">Security Logs</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8">
+            <!-- Overview Section -->
+            <div id="overview-section" class="section">
+                <h2 class="text-3xl font-bold text-slate-800 mb-6">System Overview</h2>
+                
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl p-6 text-white shadow-lg">
+                        <div class="flex items-center justify-between mb-4">
+                            <svg class="w-10 h-10 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-3xl font-bold mb-2" id="totalUsers">0</h3>
+                        <p class="text-blue-100">Total Users</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl p-6 text-white shadow-lg">
+                        <div class="flex items-center justify-between mb-4">
+                            <svg class="w-10 h-10 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-3xl font-bold mb-2" id="verifiedUsers">0</h3>
+                        <p class="text-green-100">Verified Users</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl p-6 text-white shadow-lg">
+                        <div class="flex items-center justify-between mb-4">
+                            <svg class="w-10 h-10 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-3xl font-bold mb-2" id="pendingVerifications">0</h3>
+                        <p class="text-yellow-100">Pending Reviews</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl p-6 text-white shadow-lg">
+                        <div class="flex items-center justify-between mb-4">
+                            <svg class="w-10 h-10 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-3xl font-bold mb-2" id="credentialsIssued">0</h3>
+                        <p class="text-purple-100">Credentials Issued</p>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">User Registration Trend</h3>
+                        <div style="position: relative; height: 250px;">
+                            <canvas id="registrationChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">KYC Status Distribution</h3>
+                        <div style="position: relative; height: 250px;">
+                            <canvas id="kycStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">Verification Success Rate</h3>
+                        <div style="position: relative; height: 250px;">
+                            <canvas id="verificationRateChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">Document Types Uploaded</h3>
+                        <div style="position: relative; height: 250px;">
+                            <canvas id="documentTypesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Section -->
+            <div id="users-section" class="section hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-3xl font-bold text-slate-800">All Users</h2>
+                    <div class="flex gap-3">
+                        <input type="text" id="userSearchInput" placeholder="Search users..." class="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <button onclick="refreshUserList()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">User</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Contact</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">KYC Status</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Integrity Score</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Registered</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody" class="divide-y divide-slate-200">
+                            <tr>
+                                <td colspan="6" class="px-6 py-8 text-center text-slate-500">
+                                    <div class="flex flex-col items-center">
+                                        <svg class="w-12 h-12 text-slate-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                        </svg>
+                                        <p>Loading users...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Verifications Section -->
+            <div id="verifications-section" class="section hidden">
+                <h2 class="text-3xl font-bold text-slate-800 mb-6">KYC Verifications</h2>
+                
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Verification ID</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">User ID</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Status</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Progress</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Risk Score</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Created</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="verificationsTableBody" class="divide-y divide-slate-200">
+                            <tr>
+                                <td colspan="7" class="px-6 py-8 text-center text-slate-500">Loading verifications...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Analytics Section -->
+            <div id="analytics-section" class="section hidden">
+                <h2 class="text-3xl font-bold text-slate-800 mb-6">Analytics & Insights</h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+                        <h3 class="text-sm font-semibold text-slate-600 mb-2">Average Verification Time</h3>
+                        <p class="text-3xl font-bold text-blue-600" id="avgVerificationTime">--</p>
+                        <p class="text-xs text-slate-500 mt-1">Hours to complete</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+                        <h3 class="text-sm font-semibold text-slate-600 mb-2">Success Rate</h3>
+                        <p class="text-3xl font-bold text-green-600" id="successRate">--</p>
+                        <p class="text-xs text-slate-500 mt-1">Approved verifications</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+                        <h3 class="text-sm font-semibold text-slate-600 mb-2">Rejection Rate</h3>
+                        <p class="text-3xl font-bold text-red-600" id="rejectionRate">--</p>
+                        <p class="text-xs text-slate-500 mt-1">Failed verifications</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200 mb-6">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">Monthly Performance</h3>
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="monthlyPerformanceChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">Geographic Distribution</h3>
+                    <div id="geographicData" class="space-y-3">
+                        <p class="text-slate-500">Loading geographic data...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Credentials Section -->
+            <div id="credentials-section" class="section hidden">
+                <h2 class="text-3xl font-bold text-slate-800 mb-6">Issued Credentials</h2>
+                
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Credential ID</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">User ID</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Status</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Issued Date</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Expiry Date</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="credentialsTableBody" class="divide-y divide-slate-200">
+                            <tr>
+                                <td colspan="6" class="px-6 py-8 text-center text-slate-500">Loading credentials...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Security Logs Section -->
+            <div id="security-section" class="section hidden">
+                <h2 class="text-3xl font-bold text-slate-800 mb-6">Security & Audit Logs</h2>
+                
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                    <div class="p-6 border-b border-slate-200">
+                        <div class="flex gap-3">
+                            <select id="logTypeFilter" class="px-4 py-2 border border-slate-300 rounded-lg">
+                                <option value="all">All Events</option>
+                                <option value="login">Login Events</option>
+                                <option value="signup">Signups</option>
+                                <option value="kyc">KYC Events</option>
+                                <option value="security">Security Alerts</option>
+                            </select>
+                            <button onclick="filterLogs()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Filter</button>
+                        </div>
+                    </div>
+                    
+                    <div id="securityLogs" class="divide-y divide-slate-200 max-h-96 overflow-y-auto">
+                        <p class="px-6 py-8 text-center text-slate-500">Loading security logs...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- User Detail Modal -->
+    <div id="userDetailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4">
+            <div class="p-6 border-b border-slate-200 flex items-center justify-between">
+                <h3 class="text-2xl font-bold text-slate-800">User Details</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="userDetailContent" class="p-6">
+                <p class="text-slate-500">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let charts = {};
+        let allUsers = [];
+        let allVerifications = [];
+        let allCredentials = [];
+        let allLogs = [];
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            initializeCharts();
+        });
+
+        async function loadDashboardData() {
+            try {
+                // Fetch all data from MongoDB
+                const response = await fetch('/api/admin/dashboard-data');
+                const data = await response.json();
+
+                if (data.success) {
+                    allUsers = data.users || [];
+                    allVerifications = data.verifications || [];
+                    allCredentials = data.credentials || [];
+                    allLogs = data.logs || [];
+
+                    updateStats(data.stats);
+                    updateCharts(data.analytics);
+                    populateUserTable();
+                    populateVerificationTable();
+                    populateCredentialTable();
+                    populateSecurityLogs();
+                }
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        function updateStats(stats) {
+            document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
+            document.getElementById('verifiedUsers').textContent = stats.verifiedUsers || 0;
+            document.getElementById('pendingVerifications').textContent = stats.pendingVerifications || 0;
+            document.getElementById('credentialsIssued').textContent = stats.credentialsIssued || 0;
+        }
+
+        function initializeCharts() {
+            // Registration Trend Chart
+            const regCtx = document.getElementById('registrationChart').getContext('2d');
+            charts.registration = new Chart(regCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'New Users',
+                        data: [12, 19, 15, 25, 32, 28],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // KYC Status Chart
+            const kycCtx = document.getElementById('kycStatusChart').getContext('2d');
+            charts.kycStatus = new Chart(kycCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Approved', 'Pending', 'Rejected', 'In Progress'],
+                    datasets: [{
+                        data: [45, 20, 5, 30],
+                        backgroundColor: [
+                            'rgb(34, 197, 94)',
+                            'rgb(251, 191, 36)',
+                            'rgb(239, 68, 68)',
+                            'rgb(59, 130, 246)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2
+                }
+            });
+
+            // Verification Rate Chart
+            const verRateCtx = document.getElementById('verificationRateChart').getContext('2d');
+            charts.verificationRate = new Chart(verRateCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [{
+                        label: 'Success Rate %',
+                        data: [85, 88, 92, 90],
+                        backgroundColor: 'rgb(34, 197, 94)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2,
+                    scales: {
+                        y: { beginAtZero: true, max: 100 }
+                    }
+                }
+            });
+
+            // Document Types Chart
+            const docCtx = document.getElementById('documentTypesChart').getContext('2d');
+            charts.documentTypes = new Chart(docCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Passport', 'Aadhaar', 'PAN', 'DL', 'Other'],
+                    datasets: [{
+                        data: [35, 30, 20, 10, 5],
+                        backgroundColor: [
+                            'rgb(59, 130, 246)',
+                            'rgb(16, 185, 129)',
+                            'rgb(251, 146, 60)',
+                            'rgb(139, 92, 246)',
+                            'rgb(236, 72, 153)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2
+                }
+            });
+
+            // Monthly Performance Chart
+            const monthlyCtx = document.getElementById('monthlyPerformanceChart').getContext('2d');
+            charts.monthlyPerformance = new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [
+                        {
+                            label: 'Verifications',
+                            data: [45, 52, 48, 65, 72, 68, 75, 82, 78, 85, 90, 88],
+                            borderColor: 'rgb(59, 130, 246)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Approvals',
+                            data: [38, 45, 42, 58, 65, 60, 68, 75, 70, 78, 82, 80],
+                            borderColor: 'rgb(34, 197, 94)',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 3
+                }
+            });
+        }
+
+        function updateCharts(analytics) {
+            // Update charts with real data
+            if (analytics && charts.registration) {
+                // Update registration chart
+                if (analytics.registrationTrend) {
+                    charts.registration.data.labels = analytics.registrationTrend.labels;
+                    charts.registration.data.datasets[0].data = analytics.registrationTrend.data;
+                    charts.registration.update();
+                }
+
+                // Update KYC status chart
+                if (analytics.kycDistribution) {
+                    charts.kycStatus.data.datasets[0].data = analytics.kycDistribution;
+                    charts.kycStatus.update();
+                }
+            }
+        }
+
+        function populateUserTable() {
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (allUsers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-slate-500">No users found</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = allUsers.map(user => {
+                const kycStatus = user.kyc_status?.current_state || 'not_started';
+                const statusColors = {
+                    'approved': 'bg-green-100 text-green-700',
+                    'in_progress': 'bg-blue-100 text-blue-700',
+                    'pending': 'bg-yellow-100 text-yellow-700',
+                    'rejected': 'bg-red-100 text-red-700',
+                    'not_started': 'bg-slate-100 text-slate-700'
+                };
+                
+                return `
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center text-white font-semibold">
+                                    ${(user.personal_info?.full_name || 'U').charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-800">${user.personal_info?.full_name || 'N/A'}</p>
+                                    <p class="text-xs text-slate-500">${user._id}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <p class="text-sm text-slate-700">${user.personal_info?.email || 'N/A'}</p>
+                            <p class="text-xs text-slate-500">${user.personal_info?.phone || 'N/A'}</p>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 ${statusColors[kycStatus]} rounded-full text-xs font-semibold">
+                                ${kycStatus.replace('_', ' ').toUpperCase()}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-2">
+                                <div class="flex-1 bg-slate-200 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" style="width: ${user.kyc_status?.completion_percent || 0}%"></div>
+                                </div>
+                                <span class="text-sm font-semibold text-slate-700">${user.kyc_status?.completion_percent || 0}%</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <p class="text-sm text-slate-700">${new Date(user.created_at).toLocaleDateString()}</p>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex gap-2">
+                                <button onclick="viewUserDetails('${user._id}')" class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-xs font-semibold">
+                                    View
+                                </button>
+                                <button onclick="suspendUser('${user._id}')" class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 text-xs font-semibold">
+                                    Suspend
+                                </button>
+                                <button onclick="banUser('${user._id}')" class="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-xs font-semibold">
+                                    Ban
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function populateVerificationTable() {
+            const tbody = document.getElementById('verificationsTableBody');
+            
+            if (allVerifications.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-8 text-center text-slate-500">No verifications found</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = allVerifications.map(ver => `
+                <tr class="hover:bg-slate-50">
+                    <td class="px-6 py-4">
+                        <p class="font-mono text-xs text-slate-700">${ver._id.toString().substring(0, 12)}...</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <p class="font-mono text-xs text-slate-700">${ver.user_id.substring(0, 12)}...</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                            ${ver.status || 'initiated'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 bg-slate-200 rounded-full h-2">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: ${ver.progress_percentage || 0}%"></div>
+                            </div>
+                            <span class="text-sm font-semibold">${ver.progress_percentage || 0}%</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-sm font-semibold ${(ver.risk_score || 0) > 70 ? 'text-green-600' : 'text-yellow-600'}">
+                            ${ver.risk_score || 0}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <p class="text-sm text-slate-700">${new Date(ver.created_at).toLocaleDateString()}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <button onclick="viewVerificationDetails('${ver._id}')" class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-xs font-semibold">
+                            Details
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function populateCredentialTable() {
+            const tbody = document.getElementById('credentialsTableBody');
+            
+            if (allCredentials.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-slate-500">No credentials found</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = allCredentials.map(cred => `
+                <tr class="hover:bg-slate-50">
+                    <td class="px-6 py-4">
+                        <p class="font-mono text-sm font-semibold text-slate-800">${cred.credential_id}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <p class="font-mono text-xs text-slate-700">${cred.user_id.substring(0, 12)}...</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 ${cred.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} rounded-full text-xs font-semibold">
+                            ${cred.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <p class="text-sm text-slate-700">${new Date(cred.issued_at).toLocaleDateString()}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <p class="text-sm text-slate-700">${new Date(cred.expiry_date).toLocaleDateString()}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex gap-2">
+                            <button onclick="viewCredential('${cred.credential_id}')" class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-xs font-semibold">
+                                View
+                            </button>
+                            <button onclick="revokeCredential('${cred.credential_id}')" class="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-xs font-semibold">
+                                Revoke
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function populateSecurityLogs() {
+            const container = document.getElementById('securityLogs');
+            
+            if (allLogs.length === 0) {
+                container.innerHTML = '<p class="px-6 py-8 text-center text-slate-500">No logs found</p>';
+                return;
+            }
+
+            container.innerHTML = allLogs.slice(0, 50).map(log => `
+                <div class="px-6 py-4 hover:bg-slate-50">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <p class="font-semibold text-slate-800">${log.event}</p>
+                            <p class="text-sm text-slate-600">${log.notes || ''}</p>
+                            <p class="text-xs text-slate-500 mt-1">User ID: ${log.user_id} | IP: ${log.ip}</p>
+                        </div>
+                        <span class="text-xs text-slate-500">${new Date(log.timestamp).toLocaleString()}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionName + '-section').classList.remove('hidden');
+            
+            // Update nav active state
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.closest('.nav-link').classList.add('active');
+        }
+
+        function viewUserDetails(userId) {
+            const user = allUsers.find(u => u._id === userId);
+            if (!user) return;
+
+            const content = `
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-slate-700 mb-2">Personal Information</h4>
+                        <div class="space-y-2 text-sm">
+                            <p><span class="font-medium">Name:</span> ${user.personal_info?.full_name || 'N/A'}</p>
+                            <p><span class="font-medium">Email:</span> ${user.personal_info?.email || 'N/A'}</p>
+                            <p><span class="font-medium">Phone:</span> ${user.personal_info?.phone || 'N/A'}</p>
+                            <p><span class="font-medium">DOB:</span> ${user.personal_info?.dob || 'N/A'}</p>
+                            <p><span class="font-medium">Gender:</span> ${user.personal_info?.gender || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-slate-700 mb-2">KYC Status</h4>
+                        <div class="space-y-2 text-sm">
+                            <p><span class="font-medium">Status:</span> ${user.kyc_status?.current_state || 'N/A'}</p>
+                            <p><span class="font-medium">Completion:</span> ${user.kyc_status?.completion_percent || 0}%</p>
+                            <p><span class="font-medium">Credential ID:</span> ${user.credential_id || 'Not issued'}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6 pt-6 border-t border-slate-200">
+                    <h4 class="font-semibold text-slate-700 mb-3">Account Actions</h4>
+                    <div class="flex gap-3">
+                        <button onclick="approveUser('${userId}')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Approve KYC</button>
+                        <button onclick="rejectUser('${userId}')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Reject KYC</button>
+                        <button onclick="resetKYC('${userId}')" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">Reset KYC</button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('userDetailContent').innerHTML = content;
+            document.getElementById('userDetailModal').classList.remove('hidden');
+            document.getElementById('userDetailModal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('userDetailModal').classList.add('hidden');
+            document.getElementById('userDetailModal').classList.remove('flex');
+        }
+
+        function suspendUser(userId) {
+            if (confirm('Are you sure you want to suspend this user?')) {
+                // Call API to suspend user
+                fetch(`/api/admin/suspend-user/${userId}`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert('User suspended successfully');
+                        loadDashboardData();
+                    })
+                    .catch(error => {
+                        alert('Error suspending user');
+                        console.error(error);
+                    });
+            }
+        }
+
+        function banUser(userId) {
+            if (confirm('Are you sure you want to BAN this user? This action is severe.')) {
+                fetch(`/api/admin/ban-user/${userId}`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert('User banned successfully');
+                        loadDashboardData();
+                    })
+                    .catch(error => {
+                        alert('Error banning user');
+                        console.error(error);
+                    });
+            }
+        }
+
+        function refreshUserList() {
+            loadDashboardData();
+        }
+
+        function logout() {
+            window.location.href = '/login';
+        }
+
+        // Add active state styling
+        const style = document.createElement('style');
+        style.textContent = `
+            .nav-link {
+                color: #64748b;
+            }
+            .nav-link:hover {
+                background-color: #f1f5f9;
+                color: #3b82f6;
+            }
+            .nav-link.active {
+                background-color: #dbeafe;
+                color: #2563eb;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

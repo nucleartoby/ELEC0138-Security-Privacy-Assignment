@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organization Dashboard - AegisKYC</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .sidebar-active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl font-bold">🏢 AegisKYC</h1>
+                    <span class="text-sm bg-white/20 px-3 py-1 rounded-full" id="orgName">Organization Portal</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <p class="text-sm font-medium" id="adminName">Admin</p>
+                        <p class="text-xs text-blue-200" id="adminEmail">admin@company.com</p>
+                    </div>
+                    <button onclick="logout()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-all">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white shadow-lg min-h-screen">
+            <nav class="p-4 space-y-2">
+                <a href="#overview" onclick="showSection('overview')" class="sidebar-item sidebar-active flex items-center space-x-3 px-4 py-3 rounded-lg cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    <span>Overview</span>
+                </a>
+
+                <a href="#request-kyc" onclick="showSection('request-kyc')" class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <span>Request KYC</span>
+                </a>
+
+                <a href="#verifications" onclick="showSection('verifications')" class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                    </svg>
+                    <span>Verifications</span>
+                </a>
+
+                <a href="#api-keys" onclick="showSection('api-keys')" class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                    </svg>
+                    <span>API Keys</span>
+                </a>
+
+                <a href="#analytics" onclick="showSection('analytics')" class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    <span>Analytics</span>
+                </a>
+
+                <a href="#settings" onclick="showSection('settings')" class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8">
+            <!-- Overview Section -->
+            <section id="overview-section" class="section-content">
+                <h2 class="text-3xl font-bold gradient-text mb-6">Dashboard Overview</h2>
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-blue-100 p-3 rounded-lg">
+                                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-green-600 text-sm font-semibold">+12.5%</span>
+                        </div>
+                        <h3 class="text-gray-600 text-sm mb-1">Total Requests</h3>
+                        <p class="text-3xl font-bold text-gray-800" id="totalRequests">0</p>
+                    </div>
+
+                    <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-green-100 p-3 rounded-lg">
+                                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-green-600 text-sm font-semibold">+8.2%</span>
+                        </div>
+                        <h3 class="text-gray-600 text-sm mb-1">Approved</h3>
+                        <p class="text-3xl font-bold text-gray-800" id="approvedCount">0</p>
+                    </div>
+
+                    <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-yellow-100 p-3 rounded-lg">
+                                <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-yellow-600 text-sm font-semibold">-2.1%</span>
+                        </div>
+                        <h3 class="text-gray-600 text-sm mb-1">Pending</h3>
+                        <p class="text-3xl font-bold text-gray-800" id="pendingCount">0</p>
+                    </div>
+
+                    <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-purple-100 p-3 rounded-lg">
+                                <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-purple-600 text-sm font-semibold">Live</span>
+                        </div>
+                        <h3 class="text-gray-600 text-sm mb-1">API Calls Today</h3>
+                        <p class="text-3xl font-bold text-gray-800" id="apiCalls">0</p>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Verification Trend</h3>
+                        <div style="position: relative; height: 250px;">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Status Distribution</h3>
+                        <div style="position: relative; height: 250px;">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Request KYC Section -->
+            <section id="request-kyc-section" class="section-content hidden">
+                <h2 class="text-3xl font-bold gradient-text mb-6">Request KYC Access</h2>
+
+                <div class="bg-white rounded-xl shadow-md p-8 max-w-3xl">
+                    <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p class="text-sm text-blue-800">
+                            <strong>How it works:</strong> Search for a user by their Credential ID or Email. Once found, send them a consent request. They will receive a notification and must approve before you can access their KYC details.
+                        </p>
+                    </div>
+
+                    <form id="kycRequestForm" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Search User *</label>
+                            <div class="flex gap-3">
+                                <input type="text" id="searchQuery" required
+                                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                                    placeholder="Enter Credential ID or Email">
+                                <button type="button" onclick="searchUser()"
+                                    class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">
+                                    Search
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Search Results -->
+                        <div id="searchResults" class="hidden">
+                            <div class="border border-gray-300 rounded-lg p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-800" id="foundUserName">-</h3>
+                                        <p class="text-sm text-gray-600" id="foundUserEmail">-</p>
+                                    </div>
+                                    <span class="px-3 py-1 rounded-full text-sm font-medium" id="foundUserStatus">-</span>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+                                    <div>
+                                        <span class="text-gray-600">Credential ID:</span>
+                                        <p class="font-mono font-semibold" id="foundCredentialId">-</p>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">KYC Status:</span>
+                                        <p class="font-semibold" id="foundKycStatus">-</p>
+                                    </div>
+                                </div>
+
+                                <input type="hidden" id="foundUserId">
+                                <input type="hidden" id="foundCredId">
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Purpose of Request *</label>
+                                    <textarea id="requestPurpose" rows="3" required
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                                        placeholder="e.g., Account verification for loan application"></textarea>
+                                </div>
+
+                                <button type="submit"
+                                    class="w-full gradient-bg text-white font-semibold py-3 px-6 rounded-lg hover:shadow-lg transition-all mt-4">
+                                    Send Consent Request
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Verifications Section -->
+            <section id="verifications-section" class="section-content hidden">
+                <h2 class="text-3xl font-bold gradient-text mb-6">Verification Requests</h2>
+
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <input type="text" id="searchVerifications" placeholder="Search by email or name..."
+                                class="px-4 py-2 border border-gray-300 rounded-lg w-64 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none">
+                            <div class="flex items-center gap-2">
+                                <select id="filterStatus"
+                                    class="px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none">
+                                    <option value="">All Status</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                                <button onclick="fixConsentNames()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm font-semibold">
+                                    Fix Missing Names
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Request ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Credential ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Consent Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="verificationsTable" class="divide-y divide-gray-200">
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- API Keys Section -->
+            <section id="api-keys-section" class="section-content hidden">
+                <h2 class="text-3xl font-bold gradient-text mb-6">API Keys & Integration</h2>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- API Keys Card -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Your API Keys</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-medium text-gray-700">Production Key</span>
+                                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Active</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <code class="flex-1 bg-white px-3 py-2 rounded text-sm font-mono" id="prodApiKey">••••••••••••••••••••</code>
+                                    <button onclick="toggleApiKey('prod')" class="text-blue-600 hover:text-blue-800">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                    </button>
+                                    <button onclick="copyApiKey('prod')" class="text-blue-600 hover:text-blue-800">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-medium text-gray-700">Test Key</span>
+                                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Test</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <code class="flex-1 bg-white px-3 py-2 rounded text-sm font-mono" id="testApiKey">••••••••••••••••••••</code>
+                                    <button onclick="toggleApiKey('test')" class="text-blue-600 hover:text-blue-800">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                    </button>
+                                    <button onclick="copyApiKey('test')" class="text-blue-600 hover:text-blue-800">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all">
+                            Generate New Key
+                        </button>
+                    </div>
+
+                    <!-- Documentation Card -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Integration</h3>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-700 mb-2">Base URL</h4>
+                                <code class="block bg-gray-50 px-3 py-2 rounded text-sm font-mono">https://api.aegiskyc.com/v1</code>
+                            </div>
+
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-700 mb-2">Example Request</h4>
+                                <pre class="bg-gray-900 text-green-400 p-4 rounded text-xs overflow-x-auto"><code>curl -X POST https://api.aegiskyc.com/v1/verify \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "type": "basic"
+  }'</code></pre>
+                            </div>
+
+                            <div class="pt-4 border-t border-gray-200">
+                                <a href="#" class="text-blue-600 hover:underline text-sm font-medium">View Full Documentation →</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics-section" class="section-content hidden">
+                <h2 class="text-3xl font-bold gradient-text mb-6">Analytics & Insights</h2>
+
+                <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Monthly Performance</h3>
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h4 class="text-sm font-medium text-gray-600 mb-2">Average Response Time</h4>
+                        <p class="text-3xl font-bold text-blue-600">1.8s</p>
+                        <p class="text-sm text-green-600 mt-1">↓ 0.2s faster</p>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h4 class="text-sm font-medium text-gray-600 mb-2">Success Rate</h4>
+                        <p class="text-3xl font-bold text-green-600">94.5%</p>
+                        <p class="text-sm text-green-600 mt-1">↑ 2.3% increase</p>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h4 class="text-sm font-medium text-gray-600 mb-2">Rejection Rate</h4>
+                        <p class="text-3xl font-bold text-red-600">5.5%</p>
+                        <p class="text-sm text-green-600 mt-1">↓ 1.1% decrease</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings-section" class="section-content hidden">
+                <h2 class="text-3xl font-bold gradient-text mb-6">Organization Settings</h2>
+
+                <div class="bg-white rounded-xl shadow-md p-8 max-w-3xl">
+                    <form id="settingsForm" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Organization Name</label>
+                            <input type="text" id="settingsOrgName"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Webhook URL</label>
+                            <input type="url" id="webhookUrl"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                                placeholder="https://yourapi.com/webhook">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Notification Email</label>
+                            <input type="email" id="notificationEmail"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none">
+                        </div>
+
+                        <div class="flex items-center justify-between py-3 border-t border-b border-gray-200">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-800">Email Notifications</h4>
+                                <p class="text-xs text-gray-600">Receive updates on verification status</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="emailNotif" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between py-3 border-b border-gray-200">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-800">Webhook Notifications</h4>
+                                <p class="text-xs text-gray-600">Send verification results to webhook</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="webhookNotif" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+
+                        <button type="submit"
+                            class="w-full gradient-bg text-white font-semibold py-3 px-6 rounded-lg hover:shadow-lg transition-all">
+                            Save Settings
+                        </button>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 bg-white rounded-lg shadow-lg p-4 transform translate-x-full transition-transform duration-300 hidden z-50">
+        <div class="flex items-center space-x-3">
+            <div id="toastIcon"></div>
+            <p id="toastMessage" class="text-gray-800"></p>
+        </div>
+    </div>
+
+    <!-- KYC Detail Modal -->
+    <div id="kycDetailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="gradient-bg text-white p-6 sticky top-0">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold">KYC Details</h2>
+                    <button onclick="closeKycDetailModal()" class="text-white hover:bg-white/20 rounded-lg p-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6" id="kycDetailContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:5000';
+        let charts = {};
+
+        // Check authentication
+        const orgToken = localStorage.getItem('org_token');
+        const orgName = localStorage.getItem('org_name');
+        const orgId = localStorage.getItem('org_id');
+
+        if (!orgToken) {
+            window.location.href = 'org_login.html';
+        }
+
+        // Set org name in header
+        document.getElementById('orgName').textContent = orgName || 'Organization';
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+            
+            toastMessage.textContent = message;
+            
+            if (type === 'success') {
+                toastIcon.innerHTML = '<svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+            } else {
+                toastIcon.innerHTML = '<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+            }
+            
+            toast.classList.remove('hidden', 'translate-x-full');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => toast.classList.add('hidden'), 300);
+            }, 3000);
+        }
+
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section-content').forEach(section => {
+                section.classList.add('hidden');
+            });
+
+            // Remove active class from all sidebar items
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('sidebar-active', 'text-white');
+                item.classList.add('hover:bg-gray-100');
+            });
+
+            // Show selected section
+            document.getElementById(`${sectionName}-section`).classList.remove('hidden');
+
+            // Add active class to clicked item
+            event.target.closest('.sidebar-item').classList.add('sidebar-active', 'text-white');
+            event.target.closest('.sidebar-item').classList.remove('hover:bg-gray-100');
+        }
+
+        function logout() {
+            localStorage.removeItem('org_token');
+            localStorage.removeItem('org_id');
+            localStorage.removeItem('org_name');
+            window.location.href = 'org_login.html';
+        }
+
+        function initializeCharts() {
+            // Trend Chart
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            charts.trend = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Verifications',
+                        data: [12, 19, 15, 25, 22, 30, 28],
+                        borderColor: 'rgb(102, 126, 234)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2
+                }
+            });
+
+            // Status Chart
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            charts.status = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Approved', 'Pending', 'Rejected', 'In Progress'],
+                    datasets: [{
+                        data: [45, 20, 5, 30],
+                        backgroundColor: [
+                            'rgb(34, 197, 94)',
+                            'rgb(251, 191, 36)',
+                            'rgb(239, 68, 68)',
+                            'rgb(59, 130, 246)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2
+                }
+            });
+
+            // Monthly Chart
+            const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+            charts.monthly = new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Verifications',
+                        data: [65, 78, 85, 92, 88, 95, 102, 110, 115, 122, 130, 128],
+                        borderColor: 'rgb(102, 126, 234)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 3
+                }
+            });
+        }
+
+        // Search User Function
+        async function searchUser() {
+            const searchQuery = document.getElementById('searchQuery').value.trim();
+            
+            if (!searchQuery) {
+                showToast('Please enter a Credential ID or Email', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/organization/search-user?query=${encodeURIComponent(searchQuery)}`, {
+                    headers: {
+                        'Authorization': `Bearer ${orgToken}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.user) {
+                    // Show search results
+                    document.getElementById('searchResults').classList.remove('hidden');
+                    document.getElementById('foundUserName').textContent = `${data.user.first_name} ${data.user.last_name}`;
+                    document.getElementById('foundUserEmail').textContent = data.user.email;
+                    document.getElementById('foundCredentialId').textContent = data.credential_id || 'N/A';
+                    
+                    // Get KYC status - handle both object and string
+                    const kycStatusRaw = data.user.kyc_status || 'pending';
+                    const kycStatus = (typeof kycStatusRaw === 'object') 
+                        ? kycStatusRaw.current_state 
+                        : kycStatusRaw;
+                    document.getElementById('foundKycStatus').textContent = kycStatus.charAt(0).toUpperCase() + kycStatus.slice(1);
+                    
+                    // Set status badge color based on KYC status
+                    const statusBadge = document.getElementById('foundUserStatus');
+                    if (kycStatus === 'approved') {
+                        statusBadge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800';
+                        statusBadge.textContent = 'Verified';
+                    } else if (kycStatus === 'pending') {
+                        statusBadge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800';
+                        statusBadge.textContent = 'Pending';
+                    } else if (kycStatus === 'rejected') {
+                        statusBadge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800';
+                        statusBadge.textContent = 'Rejected';
+                    } else {
+                        statusBadge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800';
+                        statusBadge.textContent = 'Not Verified';
+                    }
+
+                    // Store user data
+                    document.getElementById('foundUserId').value = data.user_id;
+                    document.getElementById('foundCredId').value = data.credential_id || '';
+                } else {
+                    showToast(data.error || 'User not found', 'error');
+                    document.getElementById('searchResults').classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Network error. Please try again.', 'error');
+            }
+        }
+
+        // KYC Request Form - Send Consent Request
+        document.getElementById('kycRequestForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const userId = document.getElementById('foundUserId').value;
+            const credentialId = document.getElementById('foundCredId').value;
+            const purpose = document.getElementById('requestPurpose').value;
+
+            if (!userId) {
+                showToast('Please search for a user first', 'error');
+                return;
+            }
+
+            const formData = {
+                user_id: userId,
+                credential_id: credentialId,
+                purpose: purpose
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/organization/request-consent`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${orgToken}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast('Consent request sent! User will be notified.', 'success');
+                    document.getElementById('searchQuery').value = '';
+                    document.getElementById('requestPurpose').value = '';
+                    document.getElementById('searchResults').classList.add('hidden');
+                    loadVerifications();
+                } else {
+                    showToast(data.error || 'Request failed!', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Network error. Please try again.', 'error');
+            }
+        });
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                console.log('Loading dashboard data with token:', orgToken ? 'Present' : 'Missing');
+                
+                const response = await fetch(`${API_BASE_URL}/api/organization/dashboard-data`, {
+                    headers: {
+                        'Authorization': `Bearer ${orgToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                console.log('Dashboard data response:', data);
+
+                if (response.ok) {
+                    // Update stats
+                    document.getElementById('totalRequests').textContent = data.total_requests || 0;
+                    document.getElementById('approvedCount').textContent = data.approved_count || 0;
+                    document.getElementById('pendingCount').textContent = data.pending_count || 0;
+                    document.getElementById('apiCalls').textContent = data.api_calls_today || 0;
+                    
+                    console.log('Stats updated:', {
+                        total: data.total_requests,
+                        approved: data.approved_count,
+                        pending: data.pending_count
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        // Load Verifications
+        async function loadVerifications() {
+            try {
+                // Add cache-busting parameter to force fresh data
+                const cacheBuster = Date.now();
+                const response = await fetch(`${API_BASE_URL}/api/organization/consent-requests?_=${cacheBuster}`, {
+                    headers: {
+                        'Authorization': `Bearer ${orgToken}`,
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                const data = await response.json();
+                
+                console.log('=== CONSENT REQUESTS RESPONSE ===');
+                console.log('Status:', response.status);
+                console.log('Data:', data);
+                console.log('Requests count:', data.requests ? data.requests.length : 0);
+
+                if (response.ok) {
+                    const tbody = document.getElementById('verificationsTable');
+                    tbody.innerHTML = '';
+
+                    if (data.requests && data.requests.length > 0) {
+                        console.log('Populating table with', data.requests.length, 'requests');
+                        
+                        data.requests.forEach((req, index) => {
+                            console.log(`Request ${index + 1}:`, req);
+                            
+                            const tr = document.createElement('tr');
+                            
+                            let consentBadge = '';
+                            if (req.consent_status === 'approved') {
+                                consentBadge = '<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Approved</span>';
+                            } else if (req.consent_status === 'rejected') {
+                                consentBadge = '<span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Rejected</span>';
+                            } else {
+                                consentBadge = '<span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Pending</span>';
+                            }
+
+                            let actionButton = '';
+                            if (req.consent_status === 'approved') {
+                                actionButton = `<button onclick="viewKycDetails('${req._id}')" class="text-blue-600 hover:text-blue-800 font-medium">View Details</button>`;
+                            } else {
+                                actionButton = '<span class="text-gray-400 text-sm">Waiting for consent</span>';
+                            }
+
+                            tr.innerHTML = `
+                                <td class="px-6 py-4 text-sm font-mono">${req.request_id || 'N/A'}</td>
+                                <td class="px-6 py-4 text-sm">${req.user_name || 'N/A'}<br><span class="text-xs text-gray-500">${req.user_email || ''}</span></td>
+                                <td class="px-6 py-4 text-sm font-mono">${req.credential_id || 'N/A'}</td>
+                                <td class="px-6 py-4 text-sm">${consentBadge}</td>
+                                <td class="px-6 py-4 text-sm">${new Date(req.created_at).toLocaleDateString()}</td>
+                                <td class="px-6 py-4 text-sm">${actionButton}</td>
+                            `;
+                            
+                            tbody.appendChild(tr);
+                        });
+                    } else {
+                        console.log('No requests found, showing empty state');
+                        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No requests yet</td></tr>';
+                    }
+                } else {
+                    console.error('Error response:', data);
+                }
+            } catch (error) {
+                console.error('Error loading verifications:', error);
+            }
+        }
+
+        // Fix missing user names in consent requests
+        async function fixConsentNames() {
+            try {
+                console.log('Calling fix-consent-names endpoint...');
+                
+                const response = await fetch(`${API_BASE_URL}/api/organization/fix-consent-names`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${orgToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                console.log('Fix response:', data);
+
+                if (response.ok) {
+                    showToast(`Fixed ${data.fixed_count} consent requests!`, 'success');
+                    // Wait a moment then reload verifications to show updated names
+                    setTimeout(() => {
+                        console.log('Reloading verifications...');
+                        loadVerifications();
+                    }, 500);
+                } else {
+                    showToast(data.error || 'Failed to fix names', 'error');
+                }
+            } catch (error) {
+                console.error('Error fixing names:', error);
+                showToast('Network error. Please try again.', 'error');
+            }
+        }
+
+        // View KYC Details
+        async function viewKycDetails(requestId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/organization/kyc-details/${requestId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${orgToken}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showKycDetailModal(data);
+                } else {
+                    showToast(data.error || 'Failed to load details', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Network error. Please try again.', 'error');
+            }
+        }
+
+        function showKycDetailModal(data) {
+            const modal = document.getElementById('kycDetailModal');
+            const content = document.getElementById('kycDetailContent');
+            
+            let html = `
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4 pb-4 border-b">
+                        <div>
+                            <p class="text-sm text-gray-600">User Name</p>
+                            <p class="font-semibold">${data.user.first_name} ${data.user.last_name}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Email</p>
+                            <p class="font-semibold">${data.user.email}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Credential ID</p>
+                            <p class="font-mono font-semibold">${data.credential_id}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">KYC Status</p>
+                            <p class="font-semibold capitalize">${typeof data.user.kyc_status === 'object' ? data.user.kyc_status.current_state : data.user.kyc_status}</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3">Verification Scores</h3>
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-700 font-medium">Identity Integrity Score:</span>
+                                <span class="text-2xl font-bold text-indigo-600">${data.verification.identity_integrity_score || 0}%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Document Authenticity:</span>
+                                <span class="font-semibold text-green-600">${data.verification.document_authenticity_score || 0}%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Face Match Score:</span>
+                                <span class="font-semibold text-blue-600">${data.verification.face_match_score || 0}%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Risk Level:</span>
+                                <span class="font-semibold capitalize ${data.verification.risk_level === 'low' ? 'text-green-600' : data.verification.risk_level === 'medium' ? 'text-yellow-600' : 'text-red-600'}">${data.verification.risk_level || 'Unknown'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Status:</span>
+                                <span class="font-semibold capitalize">${data.verification.status || 'N/A'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Progress:</span>
+                                <span class="font-semibold">${data.verification.completion_percentage || 0}%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3">Uploaded Documents</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            `;
+
+            if (data.documents && data.documents.length > 0) {
+                data.documents.forEach(doc => {
+                    html += `
+                        <div class="border rounded-lg p-4 bg-white shadow-sm">
+                            <div class="flex justify-between items-start mb-2">
+                                <p class="font-semibold text-gray-800 capitalize">${(doc.document_type || 'Document').replace(/_/g, ' ')}</p>
+                                <span class="text-xs px-2 py-1 rounded-full ${doc.verification_status === 'verified' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">${doc.verification_status || 'Pending'}</span>
+                            </div>
+                            ${doc.front_image ? `<img src="${doc.front_image}" alt="Document Front" class="w-full h-48 object-cover rounded mb-2 border">` : '<p class="text-gray-400 text-sm">No image available</p>'}
+                            ${doc.back_image ? `<div class="mt-2"><img src="${doc.back_image}" alt="Document Back" class="w-full h-48 object-cover rounded border"></div>` : ''}
+                            <div class="text-xs text-gray-600 space-y-1 mt-2">
+                                <p><strong>Category:</strong> ${(doc.category || 'N/A').replace(/_/g, ' ')}</p>
+                                <p><strong>Authenticity:</strong> <span class="font-semibold ${doc.authenticity_score >= 80 ? 'text-green-600' : doc.authenticity_score >= 60 ? 'text-yellow-600' : 'text-red-600'}">${doc.authenticity_score || 0}%</span></p>
+                                <p><strong>Uploaded:</strong> ${doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleString() : 'N/A'}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<p class="text-gray-500 col-span-2">No documents uploaded</p>';
+            }
+
+            html += `
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3">Face & Video Verification</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            `;
+
+            if (data.face_verification && data.face_verification.selfie_image) {
+                // Extract scores from nested objects
+                const livenessScore = data.face_verification.liveness_check?.score || data.face_verification.liveness_score || 0;
+                const faceMatchScore = data.face_verification.face_matching?.score || data.face_verification.face_match_score || 0;
+                const overallScore = data.face_verification.overall_score || ((livenessScore + faceMatchScore) / 2).toFixed(1);
+                
+                html += `
+                    <div class="border rounded-lg p-4 bg-white shadow-sm">
+                        <p class="font-semibold mb-2">Selfie Verification</p>
+                        <img src="${data.face_verification.selfie_image}" alt="Selfie" class="w-full h-48 object-cover rounded border mb-2">
+                        <div class="text-xs space-y-1 mt-2">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Liveness Score:</span>
+                                <span class="font-semibold text-green-600">${livenessScore}%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Face Match:</span>
+                                <span class="font-semibold text-blue-600">${faceMatchScore}%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Overall Score:</span>
+                                <span class="font-semibold text-indigo-600">${overallScore}%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Status:</span>
+                                <span class="font-semibold ${data.face_verification.verification_passed ? 'text-green-600' : 'text-red-600'}">${data.face_verification.verification_passed ? 'Passed' : 'Failed'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += '<p class="text-gray-500">No selfie verification data</p>';
+            }
+
+            if (data.video_verification && data.video_verification.video_data) {
+                // Auto-calculate overall score from individual scores
+                const lipsyncScore = data.video_verification.lipsync_score || 0;
+                const deepfakeScore = data.video_verification.deepfake_score || 0;
+                const qualityScore = data.video_verification.quality_score || 0;
+                const calculatedOverall = ((lipsyncScore + deepfakeScore + qualityScore) / 3).toFixed(1);
+                const overallScore = data.video_verification.overall_score || calculatedOverall;
+                
+                // Check if video_data is an image (base64) or actual video
+                const isImage = data.video_verification.video_data.startsWith('data:image');
+                const mediaElement = isImage 
+                    ? `<img src="${data.video_verification.video_data}" alt="Liveness Frame" class="w-full h-48 object-cover rounded border mb-2">`
+                    : `<video src="${data.video_verification.video_data}" controls class="w-full h-48 rounded border mb-2"></video>`;
+                
+                html += `
+                    <div class="border rounded-lg p-4 bg-white shadow-sm">
+                        <p class="font-semibold mb-2">Liveness Video</p>
+                        ${mediaElement}
+                        <div class="text-xs space-y-1 mt-2">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Lipsync Score:</span>
+                                <span class="font-semibold text-green-600">${lipsyncScore}%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Deepfake Score:</span>
+                                <span class="font-semibold text-blue-600">${deepfakeScore}%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Quality Score:</span>
+                                <span class="font-semibold text-purple-600">${qualityScore}%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Overall:</span>
+                                <span class="font-semibold text-indigo-600">${overallScore}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += '<p class="text-gray-500">No video verification data</p>';
+            }
+
+            html += `
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            content.innerHTML = html;
+            modal.classList.remove('hidden');
+        }
+
+        function closeKycDetailModal() {
+            document.getElementById('kycDetailModal').classList.add('hidden');
+        }
+
+        // API Key functions
+        let apiKeysVisible = { prod: false, test: false };
+        const realKeys = {
+            prod: 'pk_live_' + Math.random().toString(36).substr(2, 32),
+            test: 'pk_test_' + Math.random().toString(36).substr(2, 32)
+        };
+
+        function toggleApiKey(type) {
+            const keyElement = document.getElementById(`${type}ApiKey`);
+            apiKeysVisible[type] = !apiKeysVisible[type];
+            
+            if (apiKeysVisible[type]) {
+                keyElement.textContent = realKeys[type];
+            } else {
+                keyElement.textContent = '••••••••••••••••••••';
+            }
+        }
+
+        function copyApiKey(type) {
+            navigator.clipboard.writeText(realKeys[type]);
+            showToast('API key copied to clipboard!', 'success');
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            initializeCharts();
+            loadDashboardData();
+            loadVerifications();
+        });
+    </script>
+</body>
+</html>

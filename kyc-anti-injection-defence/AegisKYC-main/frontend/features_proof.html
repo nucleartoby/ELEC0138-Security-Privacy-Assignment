@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Feature Proofs - AegisKYC</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50 min-h-screen">
+<nav class="bg-white/80 backdrop-blur-lg border-b border-blue-100 sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+        </svg>
+      </div>
+      <span class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">AegisKYC</span>
+    </div>
+    <div>
+      <a href="/dashboard.html" class="text-sm text-slate-600 hover:text-slate-800">Back to Dashboard</a>
+    </div>
+  </div>
+</nav>
+
+<main class="max-w-6xl mx-auto px-6 py-8">
+  <h1 class="text-3xl font-bold mb-2">Feature Proofs</h1>
+  <p class="text-slate-600 mb-6">This page runs deterministic proofs for the key security, AI, and compliance features listed in the README. Use it to validate the platform's capabilities.</p>
+
+  <div class="bg-white rounded-xl p-6 shadow-lg border mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-semibold">Run Feature Proofs</h2>
+      <button id="runBtn" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-cyan-500 text-white rounded-lg">Run Proofs</button>
+    </div>
+    <div id="proofResults" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+  </div>
+
+  <div class="bg-white rounded-xl p-6 shadow-lg border">
+    <h3 class="font-semibold mb-3">Proof Details</h3>
+    <pre id="proofJson" class="text-xs text-slate-700 bg-slate-50 p-3 rounded h-80 overflow-auto">No results yet.</pre>
+  </div>
+</main>
+
+<script>
+document.getElementById('runBtn').addEventListener('click', async function() {
+  const btn = this;
+  btn.disabled = true; btn.textContent = 'Running...';
+  try {
+    const res = await fetch('/api/admin/feature-proof');
+    const j = await res.json();
+    if (!j.success) {
+      alert('Feature proof failed: ' + (j.message || 'unknown'));
+      return;
+    }
+    const p = j.proof;
+    document.getElementById('proofJson').textContent = JSON.stringify(p, null, 2);
+
+    const container = document.getElementById('proofResults');
+    container.innerHTML = '';
+    function kv(title, val) {
+      return `<div class="bg-white/50 p-4 rounded border"><div class="font-semibold mb-2">${title}</div><div class="text-sm text-slate-700">${val}</div></div>`;
+    }
+
+    container.innerHTML += kv('AES-256-GCM', p.aes_256_gcm.decrypted_equals ? 'Encrypt/Decrypt OK' : JSON.stringify(p.aes_256_gcm));
+    container.innerHTML += kv('RSA-2048 Signature', p.rsa_2048_signature.verify_result && p.rsa_2048_signature.verify_result.valid ? 'Signature valid' : JSON.stringify(p.rsa_2048_signature));
+    container.innerHTML += kv('Audit Logs', p.audit_logs.length ? 'Recent logs found: ' + p.audit_logs.map(x=>x.event).join(', ') : JSON.stringify(p.audit_logs));
+    container.innerHTML += kv('Deepfake Detection', p.deepfake_detection.error ? 'Not available' : JSON.stringify(p.deepfake_detection));
+    container.innerHTML += kv('OCR', p.ocr.error ? 'Not available' : 'Lines: ' + (p.ocr.lines ? p.ocr.lines.length : 0));
+    container.innerHTML += kv('Behavioral Analyzer', p.behavioral_analyzer.error ? 'Not available' : 'Anomaly Score: ' + (p.behavioral_analyzer.anomaly_score || p.behavioral_analyzer.anomaly_score === 0 ? p.behavioral_analyzer.anomaly_score : JSON.stringify(p.behavioral_analyzer)));
+    container.innerHTML += kv('Device Fingerprint', p.device_fingerprint.fingerprint ? p.device_fingerprint.fingerprint.slice(0,16) + '...' : JSON.stringify(p.device_fingerprint));
+
+  } catch (err) {
+    alert('Feature proof request failed: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Run Proofs';
+  }
+});
+</script>
+</body>
+</html>

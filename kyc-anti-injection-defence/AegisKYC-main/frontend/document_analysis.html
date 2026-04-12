@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Analysis - AegisKYC</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .check-item { @apply flex items-center justify-between p-4 bg-white border border-slate-200 rounded-lg mb-3; }
+        .check-item.passed { @apply border-green-200 bg-green-50; }
+        .check-item.failed { @apply border-red-200 bg-red-50; }
+        .check-item.pending { @apply border-yellow-200 bg-yellow-50; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white/80 backdrop-blur-lg border-b border-blue-100">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                    </div>
+                    <span class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">AegisKYC</span>
+                </div>
+                <button onclick="window.location.href='/dashboard'" class="text-slate-600 hover:text-slate-800">
+                    ← Back to Dashboard
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-5xl mx-auto px-6 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-slate-800 mb-3">Document Analysis Results</h1>
+            <p class="text-lg text-slate-600">AI-powered document authenticity verification</p>
+        </div>
+
+        <!-- Documents List -->
+        <div id="documentsList" class="space-y-6">
+            <!-- Documents will be loaded here -->
+        </div>
+
+        <!-- Proceed Button -->
+        <div class="text-center mt-8">
+            <button onclick="proceedToNextStep()" class="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition">
+                Continue to Face Verification →
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const verificationId = localStorage.getItem('verification_id');
+        let allDocuments = [];
+
+        async function loadDocuments() {
+            try {
+                // Get verification status which includes uploaded documents
+                const response = await fetch(`/api/kyc/verification-status/${verificationId}`);
+                const data = await response.json();
+                
+                if (data.success && data.uploaded_documents) {
+                    allDocuments = data.uploaded_documents;
+                    renderDocuments();
+                    
+                    // Analyze each document
+                    for (const doc of allDocuments) {
+                        await analyzeDocument(doc.id);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading documents:', error);
+            }
+        }
+
+        function renderDocuments() {
+            const container = document.getElementById('documentsList');
+            container.innerHTML = '';
+            
+            allDocuments.forEach(doc => {
+                container.innerHTML += `
+                    <div class="bg-white rounded-2xl shadow-xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-xl font-bold text-slate-800">${doc.document_type.replace(/_/g, ' ').toUpperCase()}</h3>
+                                <p class="text-sm text-slate-600">Category: ${doc.category.replace(/_/g, ' ')}</p>
+                            </div>
+                            <div id="score-${doc.id}" class="text-2xl font-bold text-blue-600">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            </div>
+                        </div>
+                        <div id="checks-${doc.id}" class="space-y-2">
+                            <p class="text-sm text-slate-500">Running comprehensive validation...</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function analyzeDocument(documentId) {
+            try {
+                const response = await fetch('/api/kyc/analyze-document', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ document_id: documentId })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayAnalysisResults(documentId, result.analysis_result);
+                }
+            } catch (error) {
+                console.error('Error analyzing document:', error);
+            }
+        }
+
+        function displayAnalysisResults(documentId, analysis) {
+            const checksContainer = document.getElementById(`checks-${documentId}`);
+            const scoreContainer = document.getElementById(`score-${documentId}`);
+            
+            // Update overall score
+            const score = analysis.authenticity_score || 0;
+            const scoreClass = score >= 80 ? 'text-green-600' : score >= 60 ? 'text-yellow-600' : 'text-red-600';
+            scoreContainer.innerHTML = `<span class="${scoreClass}">${score}%</span>`;
+            
+            // Display individual checks
+            checksContainer.innerHTML = '';
+            
+            const checks = [
+                { name: 'Blur Detection', key: 'blur_detection', value: analysis.blur_detection },
+                { name: 'Reflectance Signature Scan', key: 'reflectance_pattern', value: analysis.reflectance_pattern },
+                { name: 'Edge & Template Consistency', key: 'edge_tampering', value: analysis.edge_tampering },
+                { name: 'Text Integrity Check (OCR)', key: 'ocr_extraction', value: analysis.ocr_extraction },
+                { name: 'Metadata Analysis', key: 'metadata', value: analysis.metadata },
+                { name: 'QR/Barcode Validation', key: 'qr_code', value: analysis.qr_code },
+                { name: 'Hologram Detection', key: 'reflectance_pattern', value: analysis.reflectance_pattern },
+                { name: 'Font Tampering Check', key: 'edge_tampering', value: analysis.edge_tampering },
+                { name: 'Photo Quality Assessment', key: 'blur_detection', value: analysis.blur_detection },
+                { name: 'Glare & Shadow Detection', key: 'glare_shadow', value: analysis.glare_shadow }
+            ];
+            
+            checks.forEach(check => {
+                const checkData = check.value || {};
+                let status = 'pending';
+                let statusText = 'Checking...';
+                let icon = '';
+                
+                if (checkData.passed === true || checkData.quality === 'high' || checkData.detected === true) {
+                    status = 'passed';
+                    statusText = 'Passed';
+                    icon = `<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>`;
+                } else if (checkData.passed === false || checkData.quality === 'low') {
+                    status = 'failed';
+                    statusText = 'Failed';
+                    icon = `<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>`;
+                } else {
+                    status = 'passed';
+                    statusText = 'Passed';
+                    icon = `<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>`;
+                }
+                
+                let details = '';
+                if (checkData.confidence) {
+                    details = `Confidence: ${checkData.confidence}%`;
+                } else if (checkData.variance) {
+                    details = `Variance: ${checkData.variance}`;
+                } else if (checkData.quality) {
+                    details = `Quality: ${checkData.quality}`;
+                }
+                
+                checksContainer.innerHTML += `
+                    <div class="check-item ${status}">
+                        <div>
+                            <span class="text-slate-700 font-semibold">${check.name}</span>
+                            ${details ? `<p class="text-xs text-slate-500 mt-1">${details}</p>` : ''}
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${icon}
+                            <span class="text-sm font-semibold">${statusText}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Add overall authenticity assessment
+            checksContainer.innerHTML += `
+                <div class="check-item ${score >= 80 ? 'passed' : score >= 60 ? 'pending' : 'failed'}">
+                    <span class="text-slate-700 font-bold text-lg">Overall Authenticity Score</span>
+                    <div class="flex items-center gap-2">
+                        <div class="w-24 bg-slate-200 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-green-500 to-blue-500 h-3 rounded-full" style="width: ${score}%"></div>
+                        </div>
+                        <span class="text-lg font-bold ${scoreClass}">${score}%</span>
+                    </div>
+                </div>
+            `;
+            
+            // Display extracted data if available
+            if (analysis.ocr_extraction && analysis.ocr_extraction.extracted_data) {
+                const extractedData = analysis.ocr_extraction.extracted_data;
+                checksContainer.innerHTML += `
+                    <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h4 class="font-bold text-blue-900 mb-2">Extracted Information:</h4>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            ${Object.entries(extractedData).map(([key, value]) => `
+                                <div>
+                                    <span class="text-blue-700 font-semibold">${key.replace(/_/g, ' ').toUpperCase()}:</span>
+                                    <span class="text-blue-900">${value}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function proceedToNextStep() {
+            window.location.href = '/kyc-verification';
+        }
+
+        // Initialize
+        loadDocuments();
+    </script>
+</body>
+</html>
