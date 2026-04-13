@@ -213,17 +213,16 @@ def create():
                 return
     else:
         os.makedirs(pidsDirectory, exist_ok=True)
-        raise
 
-    r_code = subprocess.call("DOCKER_BUILDKIT=1 docker buildx build --platform linux/amd64 -t %s docker/Attacker/." % baseContainerNameAtt, shell=True)
+    r_code = subprocess.call("DOCKER_BUILDKIT=1 docker buildx build --platform linux/amd64 -t %s docker/attacker/." % baseContainerNameAtt, shell=True)
     check_return_code(r_code, "Building attacker container %s" % baseContainerNameAtt)
 
     if devs == 0 or devs == 2 :
-        r_code = subprocess.call("DOCKER_BUILDKIT=1 docker buildx build --platform linux/amd64 -t %s docker/Devs_connman/." % baseContainerNameConn, shell=True)
+        r_code = subprocess.call("DOCKER_BUILDKIT=1 docker buildx build --platform linux/amd64 -t %s docker/dev_connman/." % baseContainerNameConn, shell=True)
         check_return_code(r_code, "Building nodes container %s" % baseContainerNameConn)
 
     if devs == 1 or devs == 2 :
-        r_code = subprocess.call("DOCKER_BUILDKIT=1 docker buildx build --platform linux/amd64 -t %s docker/Devs_dnsmasq/." % baseContainerNameDnsm, shell=True)
+        r_code = subprocess.call("DOCKER_BUILDKIT=1 docker buildx build --platform linux/amd64 -t %s docker/dev_dnsmasq/." % baseContainerNameDnsm, shell=True)
         check_return_code(r_code, "Building nodes container %s" % baseContainerNameDnsm)
 
     r_code = subprocess.call('[ -d "$NS3_HOME" ]', shell=True)
@@ -448,8 +447,8 @@ def destroy():
             text = in_file.read()
             if os.path.exists("/proc/" + text.strip()):
                 print("NS3 is running ... killing the NS3 process")
-                    os.killpg(os.getpgid(int(text.strip())), signal.SIGTERM) #type: ignore
-                    check_return_code_chill(0, "Killing the NS3 Process")
+                os.killpg(os.getpgid(int(text.strip())), signal.SIGTERM) #type: ignore
+                check_return_code_chill(0, "Killing the NS3 Process")
             r_code = subprocess.call("sudo rm -rf %s" % (pidsDirectory +"ns3"), shell=True)
             check_return_code_chill(r_code, "Removing the NS3 pid file")
 
