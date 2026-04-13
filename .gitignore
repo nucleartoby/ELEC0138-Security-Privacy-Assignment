@@ -39,3 +39,21 @@
 
 # debug information files
 *.dwo
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# DDoS_defence_model runtime artifacts
+DDoS_defence_model/logs/*.csv
+DDoS_defence_model/__pycache__/
+DDoS_defence_model/.pytest_cache/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
