@@ -57,3 +57,6 @@ DDoS_defence_model/.pytest_cache/
 # OS
 .DS_Store
 Thumbs.db
+
+.env
+live_env/
