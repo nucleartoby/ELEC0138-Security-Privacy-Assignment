@@ -1,0 +1,10 @@
+# DDoSim Configuration — ELEC0138 Coursework
+# Usage: python3 run_ddosim.py <operation> [--config ddosim_config.yaml]
+# Operations: create | ns3 | emulation | destroy
+
+nodes: 20
+simulation_time: 600
+network: "csma"
+churn: "0"
+ns3_log: "0"
+devs: 0
