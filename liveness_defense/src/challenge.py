@@ -12,7 +12,7 @@ Features:
 - OTP fallback for failed or timed-out challenges
 - Real-time video feedback with status display
 """
-
+import sys
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -22,6 +22,7 @@ from scipy.signal import welch
 from scipy.stats import median_abs_deviation
 from otp import OTPService
 from rppg import detrend_signal, compute_correlation, compute_mad, compute_psd_and_snr, compute_std, estimate_fps, bandpass_filter, has_motion_artifact
+from inference import predict_features
 import matplotlib.pyplot as plt
 
 # Initialize OTP service for fallback authentication
@@ -69,7 +70,7 @@ PASSIVE_LIVENESS_THRESHOLD = 0.35  # Correlation threshold for passive liveness
 left_cheek_signal = []  # Green channel values from left cheek ROI
 right_cheek_signal = []  # Green channel values from right cheek ROI
 signal_times = []  # Timestamps for signal samples
-
+MIN_SIGNAL_LENGTH = 60
 # Available random actions for active liveness challenges
 ALL_ACTIONS = [
     "blink_twice",
@@ -170,7 +171,6 @@ def get_prompt(action):
     return prompts.get(action, "Show your face")
 
 
-
 def get_cheek_rois(face_landmarks, w, h, box_size=40):  # increased from 30
     """
     Calculate regions of interest (ROIs) for left and right cheeks for rPPG analysis.
@@ -216,14 +216,12 @@ def get_cheek_rois(face_landmarks, w, h, box_size=40):  # increased from 30
     return left_roi, right_roi
 
 
-
-
-
-
-
-
 # Initialize video capture from webcam
-cap = cv2.VideoCapture(0)
+video_source = 0  # default webcam
+if len(sys.argv) > 1:
+    video_source = sys.argv[1]
+
+cap = cv2.VideoCapture(video_source)
 
 # Initialize MediaPipe FaceMesh for facial landmark detection
 with mp_face_mesh.FaceMesh(
@@ -242,7 +240,8 @@ with mp_face_mesh.FaceMesh(
             break
 
         # Flip frame horizontally for mirror effect
-        frame = cv2.flip(frame, 1)
+        if video_source == 0:
+            frame = cv2.flip(frame, 1)
         h, w = frame.shape[:2]
 
         # Convert to RGB for MediaPipe processing
@@ -313,7 +312,10 @@ with mp_face_mesh.FaceMesh(
             if left_roi.size > 0 and right_roi.size > 0:
                 left_green_mean = np.mean(left_roi[:, :, 1])
                 right_green_mean = np.mean(right_roi[:, :, 1])
-                current_time = time.time()
+                if video_source == 0:
+                    current_time = time.time()
+                else:
+                    current_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000.0
 
                 left_cheek_signal.append(left_green_mean)
                 right_cheek_signal.append(right_green_mean)
@@ -333,82 +335,65 @@ with mp_face_mesh.FaceMesh(
                     has_motion_artifact(right_cheek_signal)
                 )
 
-                if motion_detected:
-                    # Reset signals on motion — don't compute metrics on corrupt window
-                    left_cheek_signal.clear()
-                    right_cheek_signal.clear()
-                    signal_times.clear()
-                    passive_liveness_passed = False
-                    passive_corr = 0.0
-                    left_peak_freq = right_peak_freq = 0.0
-                    left_peak_psd = right_peak_psd = 0.0
-                    left_snr = right_snr = 0.0
-                    left_std = right_std = 0.0
-                    left_mad = right_mad = 0.0
-                    cv2.putText(frame, "Motion detected - hold still", (20, 300),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                # Only compute metrics on clean windows
+                passive_corr = compute_correlation(left_cheek_signal, right_cheek_signal, fps_est)
+                left_std  = compute_std(left_cheek_signal, fps_est)
+                right_std = compute_std(right_cheek_signal, fps_est)
+                left_mad  = compute_mad(left_cheek_signal, fps_est)
+                right_mad = compute_mad(right_cheek_signal, fps_est)
+                left_peak_freq,  left_peak_psd,  left_snr  = compute_psd_and_snr(left_cheek_signal,  fps_est)
+                right_peak_freq, right_peak_psd, right_snr = compute_psd_and_snr(right_cheek_signal, fps_est)
 
-                else:
-                    # Only compute metrics on clean windows
-                    passive_corr = compute_correlation(left_cheek_signal, right_cheek_signal, fps_est)
-                    left_std  = compute_std(left_cheek_signal, fps_est)
-                    right_std = compute_std(right_cheek_signal, fps_est)
-                    left_mad  = compute_mad(left_cheek_signal, fps_est)
-                    right_mad = compute_mad(right_cheek_signal, fps_est)
-                    left_peak_freq,  left_peak_psd,  left_snr  = compute_psd_and_snr(left_cheek_signal,  fps_est)
-                    right_peak_freq, right_peak_psd, right_snr = compute_psd_and_snr(right_cheek_signal, fps_est)
+                # Helper functions for ratio calculations
+                def safe_ratio(a, b):
+                    a, b = abs(float(a)), abs(float(b))
+                    return min(a, b) / (max(a, b) + 1e-6)
 
-                    # Helper functions for ratio calculations
-                    def safe_ratio(a, b):
-                        a, b = abs(float(a)), abs(float(b))
-                        return min(a, b) / (max(a, b) + 1e-6)
-
-                    def safe_diff(a, b):
-                        return abs(a - b)
+                def safe_diff(a, b):
+                    return abs(a - b)
 
                     # Calculate various signal quality metrics
-                    freq_diff = safe_diff(left_peak_freq, right_peak_freq)
-                    psd_ratio = safe_ratio(left_peak_psd, right_peak_psd)
-                    std_ratio = safe_ratio(left_std, right_std)
-                    mad_ratio = safe_ratio(left_mad, right_mad)
-                    snr_ratio = safe_ratio(left_snr, right_snr)
+                freq_diff = safe_diff(left_peak_freq, right_peak_freq)
+                psd_ratio = safe_ratio(left_peak_psd, right_peak_psd)
+                std_ratio = safe_ratio(left_std, right_std)
+                mad_ratio = safe_ratio(left_mad, right_mad)
+                snr_ratio = safe_ratio(left_snr, right_snr)
 
-                    # Thresholds for passive liveness detection
-                    CORR_THRESH      = 0.50
-                    FREQ_DIFF_THRESH = 0.20
-                    PSD_RATIO_THRESH = 0.45
-                    STD_RATIO_THRESH = 0.55
-                    MAD_RATIO_THRESH = 0.55
-                    SNR_RATIO_THRESH = 0.40
-                    MIN_SNR          = -10
+                features = {
+                    "corr": passive_corr,
+                    "corr_squared": passive_corr**2,
+                    "std_diff": safe_diff(left_std, right_std),
+                    "mad_diff": safe_diff(left_mad, right_mad),
+                    "snr_diff": safe_diff(left_snr, right_snr),
+                    "psd_diff": safe_diff(left_peak_psd, right_peak_psd),
+                    "freq_diff": freq_diff,
+                    "std_ratio": std_ratio,
+                    "mad_ratio": mad_ratio,
+                    "snr_ratio": snr_ratio,
+                    "psd_ratio": psd_ratio,
+                    "freq_ratio": safe_ratio(left_peak_freq, right_peak_freq),
+                    "left_snr": left_snr,
+                    "right_snr": right_snr,
+                    "left_peak_psd": left_peak_psd,
+                    "right_peak_psd": right_peak_psd,
+                }
 
-                    # Check individual metric conditions
-                    corr_ok       = passive_corr >= CORR_THRESH
-                    left_pulse_ok  = 0.8 <= left_peak_freq  <= 3.5 and left_snr  >= MIN_SNR
-                    right_pulse_ok = 0.8 <= right_peak_freq <= 3.5 and right_snr >= MIN_SNR
-                    freq_ok       = freq_diff <= FREQ_DIFF_THRESH
-                    psd_ok        = psd_ratio >= PSD_RATIO_THRESH
-                    std_ok        = std_ratio >= STD_RATIO_THRESH
-                    mad_ok        = mad_ratio >= MAD_RATIO_THRESH
-                    snr_ok        = snr_ratio >= SNR_RATIO_THRESH
+                if len(left_cheek_signal) >= 50:
+                    pred, fake_prob = predict_features(features)
 
-                    # Hard gate — both cheeks must show valid pulse frequency
-                    if not (left_pulse_ok and right_pulse_ok):
-                        passive_liveness_passed = False
-                    else:
-                        # Calculate composite score from all metrics
-                        score = (
-                            (2 if corr_ok else 0) +
-                            freq_ok               +
-                            psd_ok                +
-                            std_ok                +
-                            mad_ok                +
-                            snr_ok
-                        )
-                        # Max score = 7, pass at 5
-                        passive_liveness_passed = score >= 5
+                    cv2.putText(
+                        frame,
+                        f"ML fake prob: {fake_prob:.2f}",
+                        (20, 330),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.7,
+                        (255, 255, 0),
+                        2,
+                    )
 
-                        passive_liveness_passed = score >= 5
+                    if fake_prob >= 0.4:
+                        status_text = "Spoof detected (ML)"
+                        otp_mode = True
 
                 cv2.rectangle(frame, (left_x1, left_y1), (left_x2, left_y2), (255, 0, 0), 2)
                 cv2.rectangle(frame, (right_x1, right_y1), (right_x2, right_y2), (0, 255, 0), 2)
@@ -491,10 +476,9 @@ with mp_face_mesh.FaceMesh(
             cv2.putText(frame, f"Smile ratio: {smile_ratio:.2f}", (20, 70),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2)
 
-
             cv2.putText(frame, f"Step: {min(current_step + 1, len(challenge_sequence))}/{len(challenge_sequence)}", (20, 180),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (200, 255, 200), 2)
-            
+
             cv2.putText(frame, f"L-PSD: {left_peak_psd:.4f}", (20, 200),
             cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 200, 0), 2)
 
@@ -515,7 +499,8 @@ with mp_face_mesh.FaceMesh(
         cv2.imshow("Challenge Response Liveness", frame)
 
         # Handle keyboard input
-        key = cv2.waitKey(1) & 0xFF
+        delay = 1 if video_source == 0 else 30
+        key = cv2.waitKey(delay) & 0xFF
 
         # Verify OTP only when timed out and user presses V
         if key == ord("v") and otp_mode and not otp_verified:
@@ -528,33 +513,30 @@ with mp_face_mesh.FaceMesh(
             else:
                 print("Invalid OTP.")
 
-
         elif key == ord("d") and len(left_cheek_signal) > 30:
             # Debug mode: display rPPG analysis plots and metrics
             fps_est = estimate_fps(signal_times)
-            
 
-            
             l_raw = np.array(left_cheek_signal)
             r_raw = np.array(right_cheek_signal)
             l_filt = bandpass_filter(l_raw, fps_est)
             r_filt = bandpass_filter(r_raw, fps_est)
-            
+
             fig, axes = plt.subplots(3, 1, figsize=(10, 8))
-            
+
             # Plot 1: raw vs filtered signals
             axes[0].plot(l_raw - np.mean(l_raw), label='Left raw', alpha=0.5)
             axes[0].plot(r_raw - np.mean(r_raw), label='Right raw', alpha=0.5)
             axes[0].set_title('Raw green channel signals')
             axes[0].legend()
-            
+
             # Plot 2: bandpassed signals + correlation
             corr = np.corrcoef(l_filt, r_filt)[0,1]
             axes[1].plot(l_filt, label='Left filtered', alpha=0.7)
             axes[1].plot(r_filt, label='Right filtered', alpha=0.7)
             axes[1].set_title(f'Bandpassed signals — correlation: {corr:.3f}')
             axes[1].legend()
-            
+
             # Plot 3: PSD of both cheeks
 
             fl, pl = welch(l_filt, fs=fps_est, nperseg=min(len(l_filt), 64))
@@ -567,11 +549,11 @@ with mp_face_mesh.FaceMesh(
             axes[2].set_xlim(0, 5)
             axes[2].set_title('Power Spectral Density')
             axes[2].legend()
-            
+
             plt.tight_layout()
             plt.savefig('rppg_debug.png')
             plt.show()
-            
+
             # Print all metric values
             print(f"FPS: {fps_est:.1f}")
             print(f"Correlation: {passive_corr:.3f}  (thresh: 0.30)")
