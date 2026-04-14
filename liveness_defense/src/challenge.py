@@ -556,7 +556,7 @@ with mp_face_mesh.FaceMesh(
             axes[1].legend()
             
             # Plot 3: PSD of both cheeks
-            from scipy.signal import welch
+
             fl, pl = welch(l_filt, fs=fps_est, nperseg=min(len(l_filt), 64))
             fr, pr = welch(r_filt, fs=fps_est, nperseg=min(len(r_filt), 64))
             axes[2].plot(fl, pl, label='Left PSD')

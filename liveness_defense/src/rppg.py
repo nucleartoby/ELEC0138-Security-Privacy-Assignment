@@ -155,7 +155,7 @@ def compute_psd_and_snr(signal, fps):
     return float(band_freqs[peak_idx]), float(signal_power), float(10 * np.log10(signal_power / noise_power))
 
 
-def has_motion_artifact(signal, threshold=10.0):
+def has_motion_artifact(signal, threshold=12.0):
     """
     Detect motion artifacts in signal using statistical outlier detection.
 
