@@ -173,5 +173,5 @@ def has_motion_artifact(signal, threshold=10.0):
     mad = median_abs_deviation(diff)
     median = np.median(diff)
     return bool(np.any(diff > median + threshold * mad))
-    return float(median_abs_deviation(bandpass_filter(signal, fps)))
+
 
