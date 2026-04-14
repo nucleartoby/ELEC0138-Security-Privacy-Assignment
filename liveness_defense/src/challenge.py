@@ -168,10 +168,7 @@ def get_prompt(action):
         "smile": "Smile"
     }
     return prompts.get(action, "Show your face")
-        "look_down": "Look down",
-        "smile": "Smile"
-    }
-    return prompts.get(action, "Show your face")
+
 
 
 def get_cheek_rois(face_landmarks, w, h, box_size=40):  # increased from 30

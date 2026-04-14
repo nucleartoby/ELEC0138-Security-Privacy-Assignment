@@ -155,7 +155,7 @@ def compute_psd_and_snr(signal, fps):
     return float(band_freqs[peak_idx]), float(signal_power), float(10 * np.log10(signal_power / noise_power))
 
 
-def has_motion_artifact(signal, threshold=8.0):
+def has_motion_artifact(signal, threshold=10.0):
     """
     Detect motion artifacts in signal using statistical outlier detection.
 
@@ -175,50 +175,3 @@ def has_motion_artifact(signal, threshold=8.0):
     return bool(np.any(diff > median + threshold * mad))
     return float(median_abs_deviation(bandpass_filter(signal, fps)))
 
-def compute_psd_and_snr(signal, fps):
-    """
-    Compute power spectral density and signal-to-noise ratio in heart rate band.
-
-    Args:
-        signal: Input signal array
-        fps: Sampling frequency
-
-    Returns:
-        tuple: (peak_frequency, peak_power, snr_db)
-    """
-    if len(signal) < 32 or fps is None:
-        return 0.0, 0.0, 0.0
-    
-    filtered = bandpass_filter(signal, fps)
-    freqs, psd = welch(filtered, fs=fps, nperseg=min(len(filtered), 64))
-    
-    pulse_band = (freqs >= 0.7) & (freqs <= 4.0)
-    if not np.any(pulse_band):
-        return 0.0, 0.0, 0.0
-
-    band_psd = psd[pulse_band]
-    band_freqs = freqs[pulse_band]
-    peak_idx = np.argmax(band_psd)
-    signal_power = band_psd[peak_idx]
-    noise_power = np.sum(psd) - signal_power + 1e-6
-
-    return float(band_freqs[peak_idx]), float(signal_power), float( 10 * np.log10(signal_power / noise_power))
-
-def has_motion_artifact(signal, threshold=8.0):
-    """
-    Detect motion artifacts in signal using statistical outlier detection.
-
-    Args:
-        signal: Input signal array
-        threshold: MAD multiplier for outlier detection (default: 8.0)
-
-    Returns:
-        bool: True if motion artifact detected
-    """
-    signal = np.array(signal, dtype=np.float64)
-    if len(signal) < 2:
-        return False
-    diff = np.abs(np.diff(signal))
-    mad = median_abs_deviation(diff)
-    median = np.median(diff)
-    return bool(np.any(diff > median + threshold * mad))
