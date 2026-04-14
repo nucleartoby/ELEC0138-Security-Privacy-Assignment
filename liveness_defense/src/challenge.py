@@ -205,8 +205,8 @@ def get_cheek_rois(face_landmarks, w, h, box_size=40):  # increased from 30
     ry = int(np.mean([p[1] for p in right_points]))
 
     # Push boxes outward away from nose by 15px
-    lx -= 15
-    rx += 15
+    lx -= 10
+    rx += 10
 
     left_roi  = (max(0, lx-box_size), max(0, ly-box_size),
                  min(w, lx+box_size), min(h, ly+box_size))
