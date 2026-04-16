@@ -1,89 +1,157 @@
 """
-rPPG (Remote Photoplethysmography) Signal Processing Module
+rPPG Signal Processing Module — Sync_rPPG Method
 
-This module provides functions for processing video-based heart rate signals
-extracted from skin regions. It includes filtering, correlation analysis,
-and motion artifact detection for passive liveness verification.
+Implements the preprocessing and feature-extraction pipeline from:
+  "Utilizing rPPG Signal Synchronization and Deep Learning Techniques
+   for Deepfake Video Detection"  (Susi et al., IEEE Access 2025)
+
+Sync_rPPG Algorithm 1 pipeline (per-cheek):
+  1. Average green-channel pixels  →  raw rPPG signal  S_t
+  2. Detrend   : S'_t = S_t − LowPass(S_t)          (remove illumination drift)
+  3. Bandpass  : Butterworth 0.7–4.0 Hz              (isolate HR band)
+  4. DWT       : wavedec(S'_t, 'db4')                (multi-scale decomposition)
+  5. Features  : SNR, PSD (Welch), MAD, STD, PCC     (from DWT approx. coeffs)
+
+Cross-cheek PCC is the primary deepfake discriminator:
+  real  → PCC ≈ 0.72  (bilateral blood-flow symmetry)
+  fake  → PCC ≈ 0.08  (generative models fail to synchronise physiology)
 """
 
 from scipy.signal import welch, detrend, butter, filtfilt
-from scipy.stats import median_abs_deviation
+import pywt
 import numpy as np
 
+# ── Constants ─────────────────────────────────────────────────────────────────
+HR_LOW      = 0.7   # Hz  (42 BPM)
+HR_HIGH     = 4.0   # Hz (240 BPM)
+DWT_WAVELET = 'db4' # Daubechies-4  (per Sync_rPPG paper)
+DWT_LEVEL   = 3     # Decomposition level; auto-reduced for short signals
 
-def detrend_signal(signal, window_size=15):
+
+# ── Preprocessing ─────────────────────────────────────────────────────────────
+
+def detrend_signal(signal, fps=None):
     """
-    Remove linear trend from signal to improve analysis.
+    Remove low-frequency baseline drift.
+
+    Sync_rPPG method:  S'_t = S_t − LowPass(S_t)
+    A Butterworth low-pass (~0.4 Hz) is used to estimate the slow baseline
+    caused by subject movement or illumination change, then subtracted.
+
+    Falls back to scipy linear detrend when fps is unavailable.
 
     Args:
-        signal: Input signal array
-        window_size: Window size for detrending (unused in current implementation)
+        signal : array-like raw rPPG signal
+        fps    : sampling frequency (Hz); enables low-pass subtraction
 
     Returns:
-        numpy.ndarray: Detrended signal
+        numpy.ndarray: baseline-removed signal
     """
     signal = np.array(signal, dtype=np.float64)
-    if len(signal) < 2:
+    if len(signal) < 4:
         return signal
-    return detrend(signal, type='linear')  # removes linear trend cleanly
+    if fps is not None and fps > 1.0:
+        nyq    = fps / 2.0
+        cutoff = min(0.4 / nyq, 0.98)          # ~0.4 Hz low-pass for baseline
+        b, a   = butter(3, cutoff, btype='low')
+        baseline = filtfilt(b, a, signal, method='gust')
+        return signal - baseline
+    return detrend(signal, type='linear')       # linear fallback
 
 
-def bandpass_filter(signal, fps, low=0.7, high=4.0):
+def bandpass_filter(signal, fps, low=HR_LOW, high=HR_HIGH):
     """
-    Apply bandpass filter to isolate heart rate frequency band (0.7-4.0 Hz).
+    Butterworth bandpass filter — isolate heart-rate band (0.7–4.0 Hz).
+
+    Applied after detrending in the Sync_rPPG pipeline.
+    Also retained as a standalone function for visualisation / debugging.
 
     Args:
-        signal: Input signal array
-        fps: Sampling frequency in Hz
-        low: Low cutoff frequency (default: 0.7 Hz)
-        high: High cutoff frequency (default: 4.0 Hz)
+        signal : array-like signal (detrended)
+        fps    : sampling frequency (Hz)
+        low    : low  cut-off (Hz), default 0.7
+        high   : high cut-off (Hz), default 4.0
 
     Returns:
-        numpy.ndarray: Bandpass filtered signal
+        numpy.ndarray: bandpass-filtered signal
     """
-    signal = detrend_signal(signal)
-    if fps is None or fps < 2 * high:  # can't filter above Nyquist
+    signal = np.array(signal, dtype=np.float64)
+    if fps is None or fps < 2 * high:
         return signal
-    nyq = fps / 2
+    nyq  = fps / 2.0
     b, a = butter(2, [low / nyq, high / nyq], btype='band')
-    return filtfilt(b, a, signal, method='gust')  # gust avoids edge issues
+    return filtfilt(b, a, signal, method='gust')
 
 
-def compute_correlation(sig1, sig2, fps_est):
+def apply_dwt(signal, wavelet=DWT_WAVELET, level=DWT_LEVEL):
     """
-    Compute correlation between two filtered signals.
+    Discrete Wavelet Transform with Daubechies-4 wavelet (Sync_rPPG Eq. 2).
+
+      x(t) = Σ_m  c_m · ψ_m(t)
+
+    Decomposes the filtered rPPG signal into multi-scale frequency components.
+    Returns the approximation coefficients c_A (dominant low-frequency content).
+
+    The decomposition level is automatically reduced when the signal is short
+    to guarantee at least 8 approximation coefficients.
 
     Args:
-        sig1: First signal array
-        sig2: Second signal array
-        fps_est: Estimated sampling frequency
+        signal  : bandpass-filtered rPPG signal
+        wavelet : mother wavelet (default 'db4')
+        level   : decomposition depth  (default 3)
 
     Returns:
-        float: Correlation coefficient (-1 to 1)
+        numpy.ndarray: DWT approximation coefficients (cA at requested level)
     """
-    if len(sig1) < 30 or len(sig2) < 30:
-        return 0.0
+    signal = np.array(signal, dtype=np.float64)
+    # Reduce level if signal too short to keep ≥ 8 approximation coefficients
+    actual_level = level
+    while actual_level > 1 and len(signal) / (2 ** actual_level) < 8:
+        actual_level -= 1
+    # Also respect PyWavelets' hard ceiling for this signal length
+    max_level    = pywt.dwt_max_level(len(signal), wavelet)
+    actual_level = min(actual_level, max_level)
 
-    sig1 = bandpass_filter(sig1, fps_est)
-    sig2 = bandpass_filter(sig2, fps_est)
+    coeffs = pywt.wavedec(signal, wavelet=wavelet, level=actual_level)
+    return np.array(coeffs[0], dtype=np.float64)   # cA = approximation
 
-    std1, std2 = np.std(sig1), np.std(sig2)
-    if std1 < 1e-6 or std2 < 1e-6:
-        return 0.0
 
-    corr = np.corrcoef(sig1, sig2)[0, 1]
-    return 0.0 if np.isnan(corr) else float(corr)
+def preprocess_rppg(signal, fps):
+    """
+    Full Sync_rPPG preprocessing pipeline for one cheek signal.
+
+    Steps:
+      1. Detrend via low-pass subtraction
+      2. Butterworth bandpass (0.7–4.0 Hz)
+      3. DWT with db4 → approximation coefficients
+
+    This is the canonical input representation for all quality-metric
+    computations in this module.
+
+    Args:
+        signal : raw green-channel time series (list or ndarray)
+        fps    : estimated sampling frequency (Hz)
+
+    Returns:
+        numpy.ndarray: DWT approximation coefficients
+    """
+    signal = np.array(signal, dtype=np.float64)
+    if len(signal) < 16:
+        return signal.copy()
+    detrended = detrend_signal(signal, fps)
+    filtered  = bandpass_filter(detrended, fps)
+    return apply_dwt(filtered)
 
 
 def estimate_fps(times):
     """
-    Estimate frames per second from timestamp array.
+    Estimate frames per second from a timestamp array.
 
     Args:
-        times: Array of timestamps
+        times: array of frame timestamps (seconds)
 
     Returns:
-        float or None: Estimated FPS, None if insufficient data
+        float or None: estimated FPS, None if < 2 timestamps
     """
     if len(times) < 2:
         return None
@@ -93,85 +161,171 @@ def estimate_fps(times):
     return (len(times) - 1) / duration
 
 
-def compute_std(signal, fps):
+# ── Quality Metrics (all computed on DWT approximation coefficients) ───────────
+
+def compute_correlation(sig1, sig2, fps_est):
     """
-    Compute standard deviation of bandpass filtered signal.
+    Pearson Correlation Coefficient (PCC) between left and right cheek
+    DWT approximation coefficients  (Sync_rPPG Eq. 7).
+
+      PCC = Σ(Xi − X̄)(Yi − Ȳ) / [√Σ(Xi−X̄)² · √Σ(Yi−Ȳ)²]
+
+    Primary deepfake discriminator:
+      real  → PCC ≈ 0.72  (coherent bilateral physiology)
+      fake  → PCC ≈ 0.08  (generative models cannot synchronise rPPG)
 
     Args:
-        signal: Input signal array
-        fps: Sampling frequency
+        sig1    : raw green-channel signal, left  cheek
+        sig2    : raw green-channel signal, right cheek
+        fps_est : estimated sampling frequency (Hz)
 
     Returns:
-        float: Standard deviation
+        float: Pearson correlation coefficient in [-1, 1]
     """
-    if len(signal) < 2:
+    if len(sig1) < 30 or len(sig2) < 30:
         return 0.0
-    return float(np.std(bandpass_filter(signal, fps)))
+
+    c1 = preprocess_rppg(sig1, fps_est)
+    c2 = preprocess_rppg(sig2, fps_est)
+
+    min_len = min(len(c1), len(c2))
+    if min_len < 4:
+        return 0.0
+    c1, c2 = c1[:min_len], c2[:min_len]
+
+    std1, std2 = np.std(c1), np.std(c2)
+    if std1 < 1e-8 or std2 < 1e-8:
+        return 0.0
+
+    corr = np.corrcoef(c1, c2)[0, 1]
+    return 0.0 if np.isnan(corr) else float(corr)
+
+
+def compute_std(signal, fps):
+    """
+    Standard deviation of DWT approximation coefficients  (Sync_rPPG Eq. 6).
+
+      SD = √[ (1/N) Σ (S_i − S̄)² ]
+
+    Lower SD → stable physiological signal (real).
+    Higher SD → irregular fluctuations characteristic of deepfakes.
+
+    Args:
+        signal : raw green-channel signal
+        fps    : sampling frequency (Hz)
+
+    Returns:
+        float: standard deviation of DWT approximation coefficients
+    """
+    if len(signal) < 16:
+        return 0.0
+    return float(np.std(preprocess_rppg(signal, fps)))
 
 
 def compute_mad(signal, fps):
     """
-    Compute median absolute deviation of bandpass filtered signal.
+    Mean Absolute Deviation of DWT approximation coefficients
+    (Sync_rPPG Eq. 5 — mean-based, not median-based).
+
+      MAD = (1/N) Σ |S_i − S̄|
+
+    Higher MAD → significant variability / lack of physiological coherence
+    (characteristic of motion artefacts or synthetic content).
 
     Args:
-        signal: Input signal array
-        fps: Sampling frequency
+        signal : raw green-channel signal
+        fps    : sampling frequency (Hz)
 
     Returns:
-        float: Median absolute deviation
+        float: mean absolute deviation of DWT approximation coefficients
     """
-    if len(signal) < 2:
+    if len(signal) < 16:
         return 0.0
-    return float(median_abs_deviation(bandpass_filter(signal, fps)))
+    coeffs = preprocess_rppg(signal, fps)
+    return float(np.mean(np.abs(coeffs - np.mean(coeffs))))
 
 
 def compute_psd_and_snr(signal, fps):
     """
-    Compute power spectral density and signal-to-noise ratio in heart rate band.
+    Power Spectral Density (Welch's method) and SNR from DWT coefficients
+    (Sync_rPPG Eqs. 3–4).
+
+    PSD  = |F{x(t)}|²  via Welch averaging on DWT approximation coefficients.
+
+    SNR  = 10·log10(P_signal / P_noise)
+      P_signal = peak power within the HR band
+      P_noise  = mean power in remaining frequencies,
+                 excluding ±0.1 Hz around the dominant peak.
+
+    Fake videos lack identifiable physiological frequency components,
+    producing flat or anomalous PSD profiles.
 
     Args:
-        signal: Input signal array
-        fps: Sampling frequency
+        signal : raw green-channel signal
+        fps    : sampling frequency (Hz)
 
     Returns:
-        tuple: (peak_frequency, peak_power, snr_db)
+        tuple: (peak_freq_hz, peak_psd_power, snr_db)
     """
     if len(signal) < 32 or fps is None:
         return 0.0, 0.0, 0.0
 
-    filtered = bandpass_filter(signal, fps)
-    freqs, psd = welch(filtered, fs=fps, nperseg=min(len(filtered), 64))
+    coeffs = preprocess_rppg(signal, fps)
+    if len(coeffs) < 4:
+        return 0.0, 0.0, 0.0
 
-    pulse_band = (freqs >= 0.7) & (freqs <= 4.0)
+    # Infer effective sampling rate from DWT downsampling ratio
+    downsample = len(signal) / max(len(coeffs), 1)
+    dwt_fps    = fps / max(downsample, 1.0)
+    dwt_nyq    = dwt_fps / 2.0
+
+    freqs, psd = welch(coeffs, fs=dwt_fps, nperseg=min(len(coeffs), 32))
+
+    # Heart-rate band clipped to frequencies representable at this DWT rate
+    hr_high_eff = min(HR_HIGH, dwt_nyq * 0.95)
+    pulse_band  = (freqs >= HR_LOW) & (freqs <= hr_high_eff)
+    if not np.any(pulse_band):
+        pulse_band = freqs > 0              # fallback: all positive frequencies
     if not np.any(pulse_band):
         return 0.0, 0.0, 0.0
 
-    band_psd = psd[pulse_band]
+    band_psd   = psd[pulse_band]
     band_freqs = freqs[pulse_band]
-    peak_idx = np.argmax(band_psd)
-    signal_power = band_psd[peak_idx]
-    noise_power = np.sum(psd) - signal_power + 1e-6
+    peak_idx   = np.argmax(band_psd)
+    peak_freq  = float(band_freqs[peak_idx])
+    signal_pow = float(band_psd[peak_idx])
 
-    return float(band_freqs[peak_idx]), float(signal_power), float(10 * np.log10(signal_power / noise_power))
+    # Noise: mean PSD across all bins, excluding ±0.1 Hz around dominant peak
+    excl_mask  = (freqs >= peak_freq - 0.1) & (freqs <= peak_freq + 0.1)
+    noise_mask = ~excl_mask & (freqs > 0)
+    if np.any(noise_mask):
+        noise_pow = float(np.mean(psd[noise_mask])) + 1e-9
+    else:
+        noise_pow = float(np.mean(psd)) + 1e-9
+
+    snr_db = float(10.0 * np.log10(signal_pow / noise_pow + 1e-9))
+    return peak_freq, signal_pow, snr_db
 
 
 def has_motion_artifact(signal, threshold=12.0):
     """
-    Detect motion artifacts in signal using statistical outlier detection.
+    Detect motion artefacts in the raw rPPG signal via statistical outlier
+    detection on frame-to-frame differences.
+
+    Uses mean absolute deviation (consistent with Sync_rPPG's MAD definition)
+    to identify frames with implausibly large colour jumps.
 
     Args:
-        signal: Input signal array
-        threshold: MAD multiplier for outlier detection (default: 8.0)
+        signal    : raw green-channel signal (pre-DWT, pre-filter)
+        threshold : MAD multiplier for outlier gate (default 12.0)
 
     Returns:
-        bool: True if motion artifact detected
+        bool: True if a motion artefact is detected
     """
     signal = np.array(signal, dtype=np.float64)
     if len(signal) < 2:
         return False
-    diff = np.abs(np.diff(signal))
-    mad = median_abs_deviation(diff)
+    diff   = np.abs(np.diff(signal))
+    mad    = np.mean(np.abs(diff - np.mean(diff)))  # mean-based MAD
     median = np.median(diff)
     return bool(np.any(diff > median + threshold * mad))
-
-
