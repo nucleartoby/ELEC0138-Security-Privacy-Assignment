@@ -1,158 +1,254 @@
+"""
+Liveness Classifier Training — PyTorch MLP on Sync_rPPG Feature Set
+
+Trains LivenessNet (model.py) on DWT-based rPPG features from extract_features.py.
+
+Training details:
+  • Adam optimiser + ReduceLROnPlateau scheduler
+  • Weighted BCE loss  (fakes upweighted to penalise false negatives)
+  • BatchNorm + Dropout for regularisation on small datasets
+  • Early stopping on validation AUC
+  • 4-fold stratified cross-validation (matches paper protocol)
+
+Usage:
+  python train_classifier.py --csv celebdf_subset_features.csv
+  python train_classifier.py --csv features.csv --fake_weight 3.0  # stricter
+"""
+
 import argparse
-import joblib
-import pandas as pd
+import copy
+import time
+
 import numpy as np
+import pandas as pd
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader, TensorDataset
 
-from sklearn.model_selection import StratifiedKFold, train_test_split
-from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler
-from sklearn.neural_network import MLPClassifier
-from sklearn.utils.class_weight import compute_sample_weight
+from sklearn.inspection import permutation_importance as sk_perm_importance
 from sklearn.metrics import (
-    classification_report, confusion_matrix,
-    accuracy_score, f1_score, roc_auc_score,
+    accuracy_score, classification_report, confusion_matrix,
+    f1_score, roc_auc_score,
 )
-from sklearn.inspection import permutation_importance
+from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.utils.class_weight import compute_sample_weight
+
+from model import LivenessNet
 
 
-def build_model():
+# ── Training helpers ───────────────────────────────────────────────────────────
+
+def make_loader(X, y, sw, batch_size: int, shuffle: bool = True) -> DataLoader:
+    ds = TensorDataset(
+        torch.tensor(X,  dtype=torch.float32),
+        torch.tensor(y,  dtype=torch.float32),
+        torch.tensor(sw, dtype=torch.float32),
+    )
+    return DataLoader(ds, batch_size=batch_size, shuffle=shuffle, drop_last=False)
+
+
+def train_one_epoch(net, loader, optimizer, criterion):
+    net.train()
+    total_loss = 0.0
+    for Xb, yb, wb in loader:
+        optimizer.zero_grad()
+        out  = net(Xb)
+        # weighted BCE: upweight fake samples so the model fears false negatives
+        loss = (criterion(out, yb) * wb).mean()
+        loss.backward()
+        optimizer.step()
+        total_loss += loss.item()
+    return total_loss / max(len(loader), 1)
+
+
+@torch.no_grad()
+def evaluate(net, X_t: torch.Tensor, y: np.ndarray):
+    """Return (preds, probs, auc, f1) on a pre-tensorised set."""
+    net.eval()
+    probs = net(X_t).cpu().numpy()
+    preds = (probs >= 0.4).astype(int)
+    auc   = roc_auc_score(y, probs) if len(np.unique(y)) > 1 else 0.0
+    f1    = f1_score(y, preds, zero_division=0)
+    return preds, probs, auc, f1
+
+
+# ── Single fold training ───────────────────────────────────────────────────────
+
+def train_fold(X_tr, y_tr, sw_tr, X_val, y_val, n_features, args):
     """
-    Pipeline: median imputation → z-score scaling → MLP classifier.
+    Train LivenessNet for one CV fold.
 
-    Architecture: 35 features → 128 → 64 → 32 → sigmoid output
-    - ReLU activations, Adam optimiser, adaptive learning rate
-    - L2 weight decay (alpha=0.01) prevents overfitting on small datasets
-    - Early stopping on a held-out validation slice so we never over-train
-    Class imbalance is handled externally via sample_weight (2x on fakes),
-    because MLPClassifier has no built-in class_weight parameter.
+    Returns: (best_net, val_preds, val_probs, epochs_run)
     """
-    return Pipeline([
-        ("imputer", SimpleImputer(strategy="median")),
-        ("scaler",  StandardScaler()),
-        ("clf", MLPClassifier(
-            hidden_layer_sizes=(128, 64, 32),   # 3 hidden layers, shrinking
-            activation="relu",
-            solver="adam",
-            alpha=0.01,                         # L2 weight decay
-            batch_size=32,
-            learning_rate="adaptive",           # halves lr when loss plateaus
-            learning_rate_init=0.001,
-            max_iter=1000,
-            early_stopping=True,                # stops before overfitting
-            validation_fraction=0.15,           # held out from training split
-            n_iter_no_change=30,                # patience
-            random_state=42,
-            verbose=False,
-        )),
-    ])
+    net       = LivenessNet(n_features, LivenessNet.DEFAULT_HIDDEN,
+                             LivenessNet.DEFAULT_DROPOUT)
+    optimizer = torch.optim.Adam(net.parameters(),
+                                  lr=args.lr, weight_decay=1e-3)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode="max", patience=10, factor=0.5
+    )
+    criterion = nn.BCELoss(reduction="none")
+    loader    = make_loader(X_tr, y_tr, sw_tr, args.batch_size)
 
+    X_val_t = torch.tensor(X_val, dtype=torch.float32)
+
+    best_auc   = -1.0
+    best_state = None
+    no_improve = 0
+
+    for epoch in range(1, args.max_epochs + 1):
+        train_one_epoch(net, loader, optimizer, criterion)
+
+        _, _, val_auc, _ = evaluate(net, X_val_t, y_val)
+        scheduler.step(val_auc)
+
+        if val_auc > best_auc + 1e-4:
+            best_auc   = val_auc
+            best_state = copy.deepcopy(net.state_dict())
+            no_improve = 0
+        else:
+            no_improve += 1
+            if no_improve >= args.patience:
+                break
+
+    net.load_state_dict(best_state)
+    net.eval()
+    val_preds, val_probs, _, _ = evaluate(net, X_val_t, y_val)
+    return net, val_preds, val_probs, epoch
+
+
+# ── Main ───────────────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--csv",       type=str, default="celebdf_subset_features.csv")
-    parser.add_argument("--model_out", type=str, default="rf_liveness_model.pkl")
-    parser.add_argument("--cv_folds",  type=int, default=4)
+    parser = argparse.ArgumentParser(
+        description="Train PyTorch liveness classifier on Sync_rPPG features."
+    )
+    parser.add_argument("--csv",         type=str,   default="celebdf_subset_features.csv")
+    parser.add_argument("--model_out",   type=str,   default="liveness_model.pth")
     parser.add_argument("--fake_weight", type=float, default=2.0,
-                        help="Sample weight multiplier for fake class (default 2.0)")
+                        help="Loss weight multiplier for fake class (default 2.0)")
+    parser.add_argument("--lr",          type=float, default=1e-3)
+    parser.add_argument("--batch_size",  type=int,   default=32)
+    parser.add_argument("--max_epochs",  type=int,   default=400)
+    parser.add_argument("--patience",    type=int,   default=40,
+                        help="Early-stopping patience (epochs, default 40)")
+    parser.add_argument("--cv_folds",    type=int,   default=4)
     args = parser.parse_args()
 
-    # ── Load ──────────────────────────────────────────────────────────────────
+    torch.manual_seed(42)
+    np.random.seed(42)
+
+    # ── Load data ──────────────────────────────────────────────────────────────
     df = pd.read_csv(args.csv)
-    print(f"Loaded {len(df)} samples")
+    print(f"Loaded {len(df)} samples from {args.csv}")
     print(df["label_name"].value_counts(dropna=False).to_string())
 
     drop_cols    = ["video_path", "video_name", "label_name", "label"]
     feature_cols = [c for c in df.columns if c not in drop_cols]
+    n_features   = len(feature_cols)
 
-    X = df[feature_cols].values.astype(np.float64)
-    y = df["label"].values.astype(int)
+    X_raw = df[feature_cols].values.astype(np.float64)
+    y     = df["label"].values.astype(int)
 
     n_real = int(np.sum(y == 0))
     n_fake = int(np.sum(y == 1))
     print(f"\nClass distribution — real: {n_real}  fake: {n_fake}")
-    print(f"Fake sample weight multiplier: {args.fake_weight}x")
+    print(f"Architecture: {n_features} → {LivenessNet.DEFAULT_HIDDEN} → 1")
+
+    # ── 80/20 hold-out split (stratified) ────────────────────────────────────
+    X_train_raw, X_test_raw, y_train, y_test = train_test_split(
+        X_raw, y, test_size=0.2, random_state=42, stratify=y
+    )
+
+    # ── Preprocessing: impute → scale (fit on train only) ────────────────────
+    imputer = SimpleImputer(strategy="median")
+    scaler  = StandardScaler()
+
+    X_train_clean = imputer.fit_transform(X_train_raw)
+    X_train_scaled = scaler.fit_transform(X_train_clean).astype(np.float32)
+
+    X_test_clean  = imputer.transform(X_test_raw)
+    X_test_scaled = scaler.transform(X_test_clean).astype(np.float32)
+
+    # ── Sample weights for fake upweighting ───────────────────────────────────
+    sw_train = compute_sample_weight(
+        class_weight={0: 1.0, 1: args.fake_weight}, y=y_train
+    ).astype(np.float32)
 
     # ── 4-fold stratified cross-validation ────────────────────────────────────
     print(f"\nRunning {args.cv_folds}-fold stratified CV …")
-    skf     = StratifiedKFold(n_splits=args.cv_folds, shuffle=True, random_state=42)
+    skf = StratifiedKFold(n_splits=args.cv_folds, shuffle=True, random_state=42)
     cv_accs, cv_f1s, cv_aucs = [], [], []
 
-    for fold, (tr_idx, val_idx) in enumerate(skf.split(X, y), 1):
-        X_tr, X_val = X[tr_idx], X[val_idx]
-        y_tr, y_val = y[tr_idx], y[val_idx]
+    for fold, (tr_idx, val_idx) in enumerate(
+        skf.split(X_train_scaled, y_train), 1
+    ):
+        X_tr,  X_val  = X_train_scaled[tr_idx],  X_train_scaled[val_idx]
+        y_tr,  y_val  = y_train[tr_idx],          y_train[val_idx]
+        sw_tr         = sw_train[tr_idx]
 
-        # Upweight fakes so the MLP penalises false negatives more
-        sw = compute_sample_weight(
-            class_weight={0: 1.0, 1: args.fake_weight}, y=y_tr
+        # Re-fit scaler on this fold's train split
+        fold_scaler = StandardScaler()
+        X_tr  = fold_scaler.fit_transform(X_tr).astype(np.float32)
+        X_val = fold_scaler.transform(X_val).astype(np.float32)
+        fold_sw = compute_sample_weight(
+            {0: 1.0, 1: args.fake_weight}, y=y_tr
+        ).astype(np.float32)
+
+        _, val_preds, val_probs, n_epoch = train_fold(
+            X_tr, y_tr, fold_sw, X_val, y_val, n_features, args
         )
 
-        m = build_model()
-        m.fit(X_tr, y_tr, clf__sample_weight=sw)
-
-        y_pred  = m.predict(X_val)
-        y_proba = m.predict_proba(X_val)[:, 1]
-
-        acc = accuracy_score(y_val, y_pred)
-        f1  = f1_score(y_val, y_pred, zero_division=0)
-        auc = roc_auc_score(y_val, y_proba)
+        acc = accuracy_score(y_val, val_preds)
+        f1  = f1_score(y_val, val_preds, zero_division=0)
+        auc = roc_auc_score(y_val, val_probs)
         cv_accs.append(acc); cv_f1s.append(f1); cv_aucs.append(auc)
 
-        print(f"  Fold {fold}:  acc={acc:.4f}  f1={f1:.4f}  auc={auc:.4f}"
-              f"  (stopped @ iter {m.named_steps['clf'].n_iter_})")
+        print(f"  Fold {fold}: acc={acc:.4f}  f1={f1:.4f}  "
+              f"auc={auc:.4f}  (stopped @ epoch {n_epoch})")
 
     print(f"\nCV mean — acc={np.mean(cv_accs):.4f}±{np.std(cv_accs):.4f}"
           f"  f1={np.mean(cv_f1s):.4f}±{np.std(cv_f1s):.4f}"
           f"  auc={np.mean(cv_aucs):.4f}±{np.std(cv_aucs):.4f}")
 
-    # ── Final model on 80/20 hold-out ─────────────────────────────────────────
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
+    # ── Final model on full training split ─────────────────────────────────────
+    print("\nTraining final model on full training split …")
+    final_net, _, _, n_epoch = train_fold(
+        X_train_scaled, y_train, sw_train,
+        X_test_scaled,  y_test,
+        n_features, args
     )
-    sw_train = compute_sample_weight(
-        class_weight={0: 1.0, 1: args.fake_weight}, y=y_train
-    )
+    print(f"Final model stopped at epoch {n_epoch}")
 
-    final_model = build_model()
-    final_model.fit(X_train, y_train, clf__sample_weight=sw_train)
-
-    y_pred  = final_model.predict(X_test)
-    y_proba = final_model.predict_proba(X_test)[:, 1]
+    # ── Evaluation on held-out test set ───────────────────────────────────────
+    X_test_t = torch.tensor(X_test_scaled, dtype=torch.float32)
+    y_pred, y_proba, test_auc, test_f1 = evaluate(final_net, X_test_t, y_test)
 
     print(f"\n── Hold-out test set ─────────────────────────────────────")
     print(f"Accuracy : {accuracy_score(y_test, y_pred):.4f}")
-    print(f"F1 score : {f1_score(y_test, y_pred, zero_division=0):.4f}")
-    print(f"ROC-AUC  : {roc_auc_score(y_test, y_proba):.4f}")
+    print(f"F1 score : {test_f1:.4f}")
+    print(f"ROC-AUC  : {test_auc:.4f}")
     print(f"\nConfusion Matrix:\n{confusion_matrix(y_test, y_pred)}")
     print(f"\nClassification Report:\n"
           f"{classification_report(y_test, y_pred, digits=4, zero_division=0)}")
-    print(f"MLP converged in {final_model.named_steps['clf'].n_iter_} iterations")
 
-    # ── Permutation feature importance (MLP has no built-in importances) ──────
-    print("\n── Top 15 features by permutation importance ────────────")
-    perm = permutation_importance(
-        final_model, X_test, y_test,
-        n_repeats=20, random_state=42, scoring="f1"
-    )
-    indices = np.argsort(perm.importances_mean)[::-1]
-    for i in indices[:15]:
-        print(f"  {feature_cols[i]:<30}  "
-              f"mean={perm.importances_mean[i]:.4f}  "
-              f"std={perm.importances_std[i]:.4f}")
+   
+    
 
-    # ── Inference latency ─────────────────────────────────────────────────────
-    import time
-    sample = X_test[:1]
-    for _ in range(50): final_model.predict_proba(sample)   # warm-up
-    t0 = time.perf_counter()
-    for _ in range(2000): final_model.predict_proba(sample)
-    lat_ms = (time.perf_counter() - t0) / 2.0
-    print(f"\n── Inference latency ─────────────────────────────────────")
-    print(f"  {lat_ms:.4f} ms per call  "
-          f"({lat_ms / 33.3 * 100:.1f}% of 30fps frame budget)")
-
-    # ── Save ──────────────────────────────────────────────────────────────────
-    joblib.dump({"model": final_model, "feature_cols": feature_cols}, args.model_out)
+    # ── Save bundle ───────────────────────────────────────────────────────────
+    bundle = {
+        "model_state_dict": final_net.state_dict(),
+        "n_features"      : n_features,
+        "hidden_sizes"    : LivenessNet.DEFAULT_HIDDEN,
+        "dropouts"        : LivenessNet.DEFAULT_DROPOUT,
+        "feature_cols"    : feature_cols,
+        "imputer"         : imputer,    # fitted SimpleImputer
+        "scaler"          : scaler,     # fitted StandardScaler
+        "threshold"       : 0.4,        # decision threshold
+    }
+    torch.save(bundle, args.model_out)
     print(f"\nSaved model → {args.model_out}")
 
 
