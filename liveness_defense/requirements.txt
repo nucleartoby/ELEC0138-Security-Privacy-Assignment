@@ -1,7 +1,11 @@
 opencv-python
 mediapipe
-numpy
+numpy<2
 scipy
 matplotlib
 python-dotenv
 certifi
+pandas
+scikit-learn
+PyWavelets
+torch
