@@ -116,6 +116,58 @@ def apply_dwt(signal, wavelet=DWT_WAVELET, level=DWT_LEVEL):
     return np.array(coeffs[0], dtype=np.float64)   # cA = approximation
 
 
+def denoise_signal_wavelet(signal, wavelet=DWT_WAVELET, level=DWT_LEVEL):
+    """
+    Wavelet soft-thresholding denoiser — VisuShrink universal threshold.
+
+    Removes high-frequency noise from the bandpass-filtered rPPG signal
+    before DWT decomposition, improving robustness against:
+      • Camera sensor noise and compression artefacts
+      • Mild motion noise
+      • Adversarial pixel perturbations on the video feed
+
+    Algorithm:
+      1. Decompose signal with DWT (db4)
+      2. Estimate noise σ from finest detail via robust MAD estimator:
+             σ = median(|d_finest|) / 0.6745
+      3. Compute universal threshold:  T = σ · √(2 ln N)
+      4. Soft-threshold all detail coefficients  (approximation untouched)
+      5. Reconstruct denoised signal via IDWT
+
+    Args:
+        signal  : bandpass-filtered rPPG signal (1-D array)
+        wavelet : mother wavelet  (default 'db4')
+        level   : decomposition depth  (default 3)
+
+    Returns:
+        numpy.ndarray: denoised signal, same length as input
+    """
+    signal = np.array(signal, dtype=np.float64)
+    if len(signal) < 8:
+        return signal.copy()
+
+    max_lvl = pywt.dwt_max_level(len(signal), wavelet)
+    lvl     = min(level, max_lvl)
+
+    coeffs = pywt.wavedec(signal, wavelet, level=lvl)
+
+    # Noise estimate from finest detail — most sensitive to high-freq noise
+    sigma = np.median(np.abs(coeffs[-1])) / 0.6745
+    if sigma < 1e-10:
+        return signal.copy()                    # already clean
+
+    # VisuShrink universal threshold
+    T = sigma * np.sqrt(2.0 * np.log(max(len(signal), 2)))
+
+    # Soft-threshold detail coefficients; leave approximation (cA) intact
+    denoised_coeffs = [coeffs[0]] + [
+        pywt.threshold(c, T, mode="soft") for c in coeffs[1:]
+    ]
+
+    reconstructed = pywt.waverec(denoised_coeffs, wavelet)
+    return reconstructed[: len(signal)]         # trim to original length
+
+
 def preprocess_rppg(signal, fps):
     """
     Full Sync_rPPG preprocessing pipeline for one cheek signal.
@@ -123,10 +175,12 @@ def preprocess_rppg(signal, fps):
     Steps:
       1. Detrend via low-pass subtraction
       2. Butterworth bandpass (0.7–4.0 Hz)
-      3. DWT with db4 → approximation coefficients
+      3. Wavelet denoising (VisuShrink soft-thresholding)
+      4. DWT with db4 → approximation coefficients
 
-    This is the canonical input representation for all quality-metric
-    computations in this module.
+    The denoising step (3) removes residual sensor / compression noise
+    after bandpass filtering, making all downstream features more stable
+    and the model more robust against adversarial video perturbations.
 
     Args:
         signal : raw green-channel time series (list or ndarray)
@@ -140,7 +194,8 @@ def preprocess_rppg(signal, fps):
         return signal.copy()
     detrended = detrend_signal(signal, fps)
     filtered  = bandpass_filter(detrended, fps)
-    return apply_dwt(filtered)
+    denoised  = denoise_signal_wavelet(filtered)   # ← adversarial robustness
+    return apply_dwt(denoised)
 
 
 def estimate_fps(times):
