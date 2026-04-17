@@ -13,10 +13,15 @@ Training details:
 Usage:
   python train_classifier.py --csv celebdf_subset_features.csv
   python train_classifier.py --csv features.csv --fake_weight 3.0  # stricter
+
+  # Train on denoised features (matches the inference pipeline when
+  # a denoiser bundle is present):
+  python train_classifier.py --csv features.csv --denoiser denoiser_bundle.pth
 """
 
 import argparse
 import copy
+import os
 import time
 
 import numpy as np
@@ -35,7 +40,7 @@ from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.class_weight import compute_sample_weight
 
-from model import LivenessNet
+from model import LivenessNet, FeatureDenoiser
 
 
 # ── Training helpers ───────────────────────────────────────────────────────────
@@ -49,17 +54,66 @@ def make_loader(X, y, sw, batch_size: int, shuffle: bool = True) -> DataLoader:
     return DataLoader(ds, batch_size=batch_size, shuffle=shuffle, drop_last=False)
 
 
-def train_one_epoch(net, loader, optimizer, criterion):
+def fgsm_perturb(net, Xb: torch.Tensor, yb: torch.Tensor,
+                  criterion, epsilon: float) -> torch.Tensor:
+    """
+    Fast Gradient Sign Method (FGSM) — feature-space adversarial examples.
+
+    Generates a perturbation in the direction that maximises the loss:
+        X_adv = X + ε · sign(∇_X  L(f(X), y))
+
+    In our context X is the scaled feature vector (not raw pixels), so this
+    forces the MLP to be robust against small corruptions of rPPG features —
+    mimicking an attacker who slightly manipulates face colour to spoof the
+    green-channel signal.
+
+    The FGSM forward/backward is kept separate from the optimiser step so
+    the model weights are not modified by the perturbation gradient.
+    """
+    net.train()                                      # need BN in train mode
+    Xb_adv = Xb.clone().detach().requires_grad_(True)
+    loss   = criterion(net(Xb_adv), yb).mean()
+    loss.backward()
+    with torch.no_grad():
+        Xb_adv = Xb + epsilon * Xb_adv.grad.sign()
+    return Xb_adv.detach()
+
+
+def train_one_epoch(net, loader, optimizer, criterion,
+                    adv_eps: float = 0.0, adv_alpha: float = 0.5):
+    """
+    One training epoch, optionally with FGSM adversarial training.
+
+    When adv_eps > 0 each mini-batch loss is a convex combination of:
+        L = (1 − α)·L_clean  +  α·L_adv
+    where L_adv is computed on FGSM-perturbed feature vectors.
+    This regularises the model to be insensitive to small feature-space
+    perturbations without requiring extra labelled data.
+
+    Args:
+        adv_eps   : FGSM perturbation magnitude (0 = disabled)
+        adv_alpha : weight of adversarial loss term  (default 0.5)
+    """
     net.train()
     total_loss = 0.0
     for Xb, yb, wb in loader:
-        optimizer.zero_grad()
-        out  = net(Xb)
-        # weighted BCE: upweight fake samples so the model fears false negatives
-        loss = (criterion(out, yb) * wb).mean()
+
+        if adv_eps > 0.0:
+            # ── Adversarial branch ────────────────────────────────────────────
+            Xb_adv = fgsm_perturb(net, Xb, yb, criterion, adv_eps)
+            optimizer.zero_grad()
+            loss_clean = (criterion(net(Xb),     yb) * wb).mean()
+            loss_adv   = (criterion(net(Xb_adv), yb) * wb).mean()
+            loss       = (1.0 - adv_alpha) * loss_clean + adv_alpha * loss_adv
+        else:
+            # ── Standard branch ───────────────────────────────────────────────
+            optimizer.zero_grad()
+            loss = (criterion(net(Xb), yb) * wb).mean()
+
         loss.backward()
         optimizer.step()
         total_loss += loss.item()
+
     return total_loss / max(len(loader), 1)
 
 
@@ -99,7 +153,8 @@ def train_fold(X_tr, y_tr, sw_tr, X_val, y_val, n_features, args):
     no_improve = 0
 
     for epoch in range(1, args.max_epochs + 1):
-        train_one_epoch(net, loader, optimizer, criterion)
+        train_one_epoch(net, loader, optimizer, criterion,
+                        adv_eps=args.adv_eps, adv_alpha=args.adv_alpha)
 
         _, _, val_auc, _ = evaluate(net, X_val_t, y_val)
         scheduler.step(val_auc)
@@ -135,6 +190,15 @@ def main():
     parser.add_argument("--patience",    type=int,   default=40,
                         help="Early-stopping patience (epochs, default 40)")
     parser.add_argument("--cv_folds",    type=int,   default=4)
+    parser.add_argument("--adv_eps",     type=float, default=0.05,
+                        help="FGSM epsilon for adversarial training "
+                             "(0 = disabled, 0.05 = recommended)")
+    parser.add_argument("--adv_alpha",   type=float, default=0.5,
+                        help="Weight of adversarial loss vs clean loss (default 0.5)")
+    parser.add_argument("--denoiser",    type=str,   default=None,
+                        help="Path to a denoiser_bundle.pth. When provided, the "
+                             "classifier is trained on features passed through "
+                             "the denoiser (matches the inference pipeline).")
     args = parser.parse_args()
 
     torch.manual_seed(42)
@@ -171,6 +235,35 @@ def main():
 
     X_test_clean  = imputer.transform(X_test_raw)
     X_test_scaled = scaler.transform(X_test_clean).astype(np.float32)
+
+    # ── Optional ADDM denoiser as preprocessing ──────────────────────────────
+    # When --denoiser is supplied, pass scaled features through the pretrained
+    # FeatureDenoiser so the classifier learns on the SAME distribution it will
+    # see at inference time (raw → scaler → denoiser → classifier).
+    # The denoiser's weights are frozen here — only the classifier trains.
+    if args.denoiser and os.path.exists(args.denoiser):
+        den_bundle = torch.load(args.denoiser, map_location="cpu", weights_only=False)
+        denoiser   = FeatureDenoiser(
+            n_features = den_bundle["n_features"],
+            hidden     = tuple(den_bundle.get("denoiser_hidden", (64, 32, 16))),
+        )
+        denoiser.load_state_dict(den_bundle["denoiser_state_dict"])
+        denoiser.eval()
+
+        with torch.no_grad():
+            X_train_scaled = (
+                denoiser(torch.tensor(X_train_scaled, dtype=torch.float32))
+                .cpu().numpy().astype(np.float32)
+            )
+            X_test_scaled = (
+                denoiser(torch.tensor(X_test_scaled, dtype=torch.float32))
+                .cpu().numpy().astype(np.float32)
+            )
+        print(f"Applied denoiser from {args.denoiser} "
+              f"(train/test features now pass through ADDM denoiser)")
+    elif args.denoiser:
+        print(f"WARNING: denoiser path {args.denoiser} not found — "
+              "training on RAW scaled features.")
 
     # ── Sample weights for fake upweighting ───────────────────────────────────
     sw_train = compute_sample_weight(
@@ -244,9 +337,9 @@ def main():
         "hidden_sizes"    : LivenessNet.DEFAULT_HIDDEN,
         "dropouts"        : LivenessNet.DEFAULT_DROPOUT,
         "feature_cols"    : feature_cols,
-        "imputer"         : imputer,    # fitted SimpleImputer
-        "scaler"          : scaler,     # fitted StandardScaler
-        "threshold"       : 0.4,        # decision threshold
+        "imputer"         : imputer,    
+        "scaler"          : scaler,     
+        "threshold"       : 0.4,        
     }
     torch.save(bundle, args.model_out)
     print(f"\nSaved model → {args.model_out}")
