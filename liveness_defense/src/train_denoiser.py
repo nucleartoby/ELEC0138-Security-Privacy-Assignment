@@ -1,13 +1,9 @@
 """
 train_denoiser.py — ADDM-inspired Feature-Space Denoiser Training
-==================================================================
 
-Implements the Adversarial Denoising approach from:
-  Yu et al. "Adversarial Denoising Diffusion Model for Anomaly Detection"
-  NeurIPS 2023 — https://arxiv.org/abs/2312.04382
 
 Adaptation to feature-space liveness detection
------------------------------------------------
+
 Instead of denoising image patches in pixel space, we denoise the 35-dim
 rPPG feature vectors in feature space.  The model is trained on REAL face
 features only.
@@ -57,11 +53,6 @@ from model import FeatureDenoiser, FeatureDiscriminator
 SEED = 42
 torch.manual_seed(SEED)
 np.random.seed(SEED)
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# Data helpers
-# ══════════════════════════════════════════════════════════════════════════════
 
 def load_real_features(csv_path: str, classifier_bundle_path: str | None = None):
     """
@@ -121,9 +112,7 @@ def load_real_features(csv_path: str, classifier_bundle_path: str | None = None)
     return X, feature_cols, imputer, scaler
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# ADDM Training
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 def add_noise(x: torch.Tensor, sigma_min: float, sigma_max: float) -> torch.Tensor:
     """
@@ -170,7 +159,7 @@ def train_addm(
         (denoiser, discriminator, train_stats)
         train_stats: dict with loss curves + calibration statistics
     """
-    # ── Train/val split ───────────────────────────────────────────────────────
+
     idx      = np.random.permutation(len(X_real))
     n_val    = max(1, int(len(X_real) * val_split))
     val_idx  = idx[:n_val]
@@ -186,7 +175,7 @@ def train_addm(
         drop_last=(len(X_trn) > batch_size),
     )
 
-    # ── Models ────────────────────────────────────────────────────────────────
+  
     denoiser = FeatureDenoiser(n_features).to(device)
     disc     = FeatureDiscriminator(n_features).to(device)
 
@@ -201,7 +190,7 @@ def train_addm(
     real_label = lambda n: torch.ones(n,  device=device)
     fake_label = lambda n: torch.zeros(n, device=device)
 
-    # ── History ───────────────────────────────────────────────────────────────
+
     history     = {"recon": [], "adv_d": [], "adv_g": [], "val_recon": []}
     best_val    = float("inf")
     best_state  = None

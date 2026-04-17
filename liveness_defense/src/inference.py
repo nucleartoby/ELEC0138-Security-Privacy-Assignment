@@ -1,6 +1,6 @@
 """
 Inference Module — Denoiser → LivenessNet (sequential pipeline)
-================================================================
+
 
 Loads the trained LivenessNet bundle saved by train_classifier.py and
 optionally the FeatureDenoiser bundle saved by train_denoiser.py.

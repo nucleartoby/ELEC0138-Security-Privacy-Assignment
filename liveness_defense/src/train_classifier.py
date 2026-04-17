@@ -128,7 +128,7 @@ def evaluate(net, X_t: torch.Tensor, y: np.ndarray):
     return preds, probs, auc, f1
 
 
-# ── Single fold training ───────────────────────────────────────────────────────
+
 
 def train_fold(X_tr, y_tr, sw_tr, X_val, y_val, n_features, args):
     """

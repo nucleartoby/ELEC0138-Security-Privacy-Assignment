@@ -7,7 +7,7 @@ photoplethysmography) from cheek regions. The system uses MediaPipe for facial l
 detection and OpenCV for video processing.
 
 Passive liveness uses the Sync_rPPG pipeline:
-  green channel → detrend (low-pass subtraction) → bandpass (0.7–4.0 Hz)
+  green channel → detrend (low-pass subtraction) → bandpass (0.7-4.0 Hz)
   → DWT (db4) → quality metrics (SNR, PSD, MAD, STD, PCC)
 
 Features:

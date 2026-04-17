@@ -28,7 +28,7 @@ DWT_WAVELET = 'db4' # Daubechies-4  (per Sync_rPPG paper)
 DWT_LEVEL   = 3     # Decomposition level; auto-reduced for short signals
 
 
-# ── Preprocessing ─────────────────────────────────────────────────────────────
+
 
 def detrend_signal(signal, fps=None):
     """
