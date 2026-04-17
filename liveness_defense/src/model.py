@@ -10,9 +10,6 @@ Contains three classes:
 LivenessNet shared by train_classifier.py and inference.py.
 FeatureDenoiser / FeatureDiscriminator shared by train_denoiser.py and inference.py.
 
-References:
-  Yu et al. "Adversarial Denoising Diffusion Model for Anomaly Detection"
-  NeurIPS 2023 — https://arxiv.org/abs/2312.04382
 """
 
 import torch
