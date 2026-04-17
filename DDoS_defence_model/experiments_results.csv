@@ -1,0 +1,6 @@
+variant,name,total,allowed,blocked,block_rate,blocked_blocklist,blocked_rate_limit,blocked_anomaly,blocked_reputation,blocked_ml
+A,Single-source burst,11962,9,11953,99.9,11948,0,0,0,5
+B,Sustained flood,11537,9,11528,99.9,11523,0,0,0,5
+C,Distributed botnet,11396,9,11387,99.9,11382,0,0,0,5
+D,Slow drip (low-and-slow),1008,9,999,99.1,994,0,0,0,5
+E,Mixed burst/idle,2790,9,2781,99.7,2776,0,0,0,5

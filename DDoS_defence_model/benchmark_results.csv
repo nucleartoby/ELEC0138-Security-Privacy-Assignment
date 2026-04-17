@@ -1,5 +1,5 @@
 metric,vulnerable,defended
-total_requests,400,400
-served_200,400,21
-blocked,0,379
-block_rate_pct,0.0,94.8
+total_requests,5357,17618
+served_200,5357,9
+blocked,0,17609
+block_rate_pct,0.0,99.9
