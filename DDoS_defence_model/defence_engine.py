@@ -3,7 +3,7 @@
 DDoS defence engine: multi-layer request evaluation.
 
 Exposes DDoSDefence, DefenceConfig and Verdict. Each incoming request is
-evaluated by five layers in order; the first layer that fires decides
+evaluated by five layers in order. The first layer that fires decides
 the outcome. Layers 3-5 feed into a reputation score that can promote an
 IP to the dynamic blocklist, at which point subsequent requests from
 that IP are rejected by Layer 1 in constant time.

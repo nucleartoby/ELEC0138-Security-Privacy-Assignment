@@ -234,7 +234,6 @@ def _write_markdown(results: list, path: str) -> None:
     with open(path, "w") as f:
         f.write("# Attack Variant Evaluation\n\n")
         f.write("| Variant | Attack Pattern | Total | Allowed | Blocked | Block Rate |\n")
-        f.write("|:-------:|---------------|------:|--------:|--------:|-----------:|\n")
         for r in results:
             f.write(f"| {r['variant']} | {r['name']} | "
                     f"{r['total']:,} | {r['allowed']:,} | "
@@ -242,7 +241,6 @@ def _write_markdown(results: list, path: str) -> None:
 
         f.write("\n## Per-layer breakdown\n\n")
         f.write("| Variant | Blocklist | Rate Limit | Anomaly | Reputation | ML |\n")
-        f.write("|:-------:|----------:|-----------:|--------:|-----------:|---:|\n")
         for r in results:
             f.write(f"| {r['variant']} | {r['blocked_blocklist']:,} | "
                     f"{r['blocked_rate_limit']:,} | "
@@ -287,7 +285,6 @@ def main():
 
     print("Summary")
     print(f"{'variant':<10s} {'name':<30s} {'total':>8s} {'blocked':>9s} {'rate':>8s}")
-    print("-" * 70)
     for r in results:
         print(f"{r['variant']:<10s} {r['name']:<30s} "
               f"{r['total']:>8,} {r['blocked']:>9,} {r['block_rate']:>7.1f}%")

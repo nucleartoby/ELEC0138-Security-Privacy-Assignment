@@ -14,7 +14,6 @@ import argparse
 import csv
 import threading
 import time
-
 import requests
 
 
@@ -189,7 +188,6 @@ def main():
 
     print()
     print(f"{'metric':<18} {'vulnerable':>12} {'defended':>12}")
-    print("-" * 46)
     print(f"{'total requests':<18} {v['total']:>12,} {d['total']:>12,}")
     print(f"{'served (200)':<18} {v['allowed']:>12,} {d['allowed']:>12,}")
     print(f"{'blocked':<18} {v['blocked']:>12,} {d['blocked']:>12,}")

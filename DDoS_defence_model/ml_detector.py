@@ -6,9 +6,6 @@ Maintains per-IP rolling feature vectors (request rate, inter-arrival
 statistics, path diversity, burst ratio) and scores them against a
 model fit at startup on synthetic 'normal' traffic patterns. IPs
 scoring as outliers are flagged as anomalous.
-
-Runs on CPU. No external training data required; the synthetic fit is
-deterministic via the random_state parameter.
 """
 
 from __future__ import annotations
