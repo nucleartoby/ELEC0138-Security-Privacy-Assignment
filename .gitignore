@@ -60,3 +60,7 @@ Thumbs.db
 
 .env
 live_env/
+
+dist/
+synth_integrity_sim/dist/
+synth_integrity_sim/node_modules/
