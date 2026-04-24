@@ -215,6 +215,7 @@ class DDoSDefence:
             "blocked_anomaly": 0,
             "blocked_reputation": 0,
             "blocked_ml": 0,
+            "blocked_honeypot": 0,
         }
         self._stats_lock = threading.Lock()
         self.enabled = True
@@ -316,6 +317,22 @@ class DDoSDefence:
     def set_enabled(self, enabled: bool) -> None:
         self.enabled = enabled
 
+    def blocklist_ip(self, ip: str, reason: str = "manual",
+                     duration: Optional[int] = None) -> None:
+        """Promote an IP directly to the dynamic blocklist.
+
+        Bypasses the reputation layer. Used by the honeypot/deception
+        layer in protected_server.py to treat a hit on a decoy path as
+        confirmed reconnaissance and block the source for the standard
+        auto-block window.
+        """
+        ttl = duration if duration is not None else self.config.auto_block_seconds
+        self.blocklist.add_dynamic(ip, ttl)
+        with self._stats_lock:
+            if reason == "honeypot":
+                self.stats["blocked_honeypot"] += 1
+            else:
+                self.stats["blocked_blocklist"] += 1
 
 def _self_test():
     cfg = DefenceConfig(

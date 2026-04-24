@@ -51,6 +51,15 @@ EXEMPT_PATHS = {
     "/api/defence/reset",
 }
 
+HONEYPOT_PATHS = {
+    "/admin.php",
+    "/wp-login.php",
+    "/wp-admin",
+    "/.env",
+    "/.git/config",
+    "/phpmyadmin",
+    "/api/admin/debug",
+}
 
 @app.before_request
 def defence_middleware():
@@ -61,6 +70,12 @@ def defence_middleware():
 
     with _stats_lock:
         _server_stats["total_requests"] += 1
+
+    if request.path in HONEYPOT_PATHS:
+        _defence.blocklist_ip(client_ip, reason="honeypot")
+        with _stats_lock:
+            _server_stats["rejected_requests"] += 1
+        return jsonify(error="forbidden"), 403
 
     if not _defence_enabled:
         with _stats_lock:
